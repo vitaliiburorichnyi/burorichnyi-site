@@ -1,0 +1,114 @@
+{
+  "redirects": [
+    {
+      "source": "/RAG-Support-Knowledge-Agent-13-3b570072ce9281c18933e035a1efb68c",
+      "destination": "/#rag",
+      "permanent": true
+    },
+    {
+      "source": "/3b570072ce9281c18933e035a1efb68c",
+      "destination": "/#rag",
+      "permanent": true
+    },
+    {
+      "source": "/AI-Email-Support-System-01-37370072ce928073b947e35b25dce33e",
+      "destination": "/#email-support",
+      "permanent": true
+    },
+    {
+      "source": "/37370072ce928073b947e35b25dce33e",
+      "destination": "/#email-support",
+      "permanent": true
+    },
+    {
+      "source": "/AI-Voice-Sales-Qualifier-02-36b70072ce9280a28066d6d9c767d640",
+      "destination": "/#voice-qualifier",
+      "permanent": true
+    },
+    {
+      "source": "/36b70072ce9280a28066d6d9c767d640",
+      "destination": "/#voice-qualifier",
+      "permanent": true
+    },
+    {
+      "source": "/Call-QA-Retention-Automation-03-37570072ce92809890bafcb6657f2565",
+      "destination": "/#call-qa",
+      "permanent": true
+    },
+    {
+      "source": "/37570072ce92809890bafcb6657f2565",
+      "destination": "/#call-qa",
+      "permanent": true
+    },
+    {
+      "source": "/SmartOrder-Order-Automation-for-HoReCa-05-38170072ce928027b363c5c97de6659b",
+      "destination": "/#smartorder",
+      "permanent": true
+    },
+    {
+      "source": "/38170072ce928027b363c5c97de6659b",
+      "destination": "/#smartorder",
+      "permanent": true
+    },
+    {
+      "source": "/Payment-Report-Automation-04-36470072ce9280609377ef0bccb92281",
+      "destination": "/#payment-report",
+      "permanent": true
+    },
+    {
+      "source": "/36470072ce9280609377ef0bccb92281",
+      "destination": "/#payment-report",
+      "permanent": true
+    },
+    {
+      "source": "/Support-Ticket-Router-with-SLA-Control-10-37a70072ce9280e3bc23c7cb463bfdcf",
+      "destination": "/#ticket-router",
+      "permanent": true
+    },
+    {
+      "source": "/37a70072ce9280e3bc23c7cb463bfdcf",
+      "destination": "/#ticket-router",
+      "permanent": true
+    },
+    {
+      "source": "/Voice-AI-Agent-for-Retail-06-36770072ce9280218033d3d5655d205e",
+      "destination": "/#voice-retail",
+      "permanent": true
+    },
+    {
+      "source": "/36770072ce9280218033d3d5655d205e",
+      "destination": "/#voice-retail",
+      "permanent": true
+    },
+    {
+      "source": "/Sales-Pipeline-Intelligence-System-08-36870072ce928022b845c7f4b5e97afe",
+      "destination": "/#pipeline-intel",
+      "permanent": true
+    },
+    {
+      "source": "/36870072ce928022b845c7f4b5e97afe",
+      "destination": "/#pipeline-intel",
+      "permanent": true
+    },
+    {
+      "source": "/Lead-Qualification-Auto-Funnel-09-34670072ce92807c931df1beeca4ac19",
+      "destination": "/#lead-funnel",
+      "permanent": true
+    },
+    {
+      "source": "/34670072ce92807c931df1beeca4ac19",
+      "destination": "/#lead-funnel",
+      "permanent": true
+    },
+    {
+      "source": "/YouTube-Video-Intelligence-Digest-07-36e70072ce92801ebcaec17716364b0c",
+      "destination": "/#youtube-digest",
+      "permanent": true
+    },
+    {
+      "source": "/36e70072ce92801ebcaec17716364b0c",
+      "destination": "/#youtube-digest",
+      "permanent": true
+    }
+  ]
+}
