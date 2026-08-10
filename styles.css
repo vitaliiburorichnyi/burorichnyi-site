@@ -1,0 +1,821 @@
+/* ==========================================================================
+   burorichnyi.com - interactive portfolio map
+   Dark, technical, calm. One clean sans. Category colour lives in the border
+   and the active glow, never in a filled pill background.
+   ========================================================================== */
+
+:root {
+  /* Surfaces */
+  --bg:            #0a0e17;
+  --bg-band:       #0e1421;
+  --bg-lift:       rgba(255, 255, 255, 0.028);
+  --bg-lift-hover: rgba(255, 255, 255, 0.055);
+  --border:        #1b2334;
+  --border-strong: #27324a;
+
+  /* Text */
+  --text:          #dde3ee;
+  --text-soft:     #aab3c5;
+  --text-muted:    #8b94a8;
+
+  /* Category colours: muted, not neon */
+  --problem:       #b3a4f5;
+  --system:        #86bff2;
+  --capability:    #7ed4a6;
+
+  /* How far unrelated pills fade, and how the active pill glows. Both are
+     themed: a glow that reads on near-black looks like a smudge on white. */
+  --dim:           0.35;
+  --pill-glow:     0 0 22px -6px color-mix(in srgb, var(--accent) 65%, transparent);
+
+  --radius:        14px;
+  --radius-pill:   999px;
+  --panel-w:       400px;
+  --gutter:        clamp(16px, 3vw, 34px);
+
+  --ease:          cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  color-scheme: dark;
+}
+
+/* Light theme. The inline script in <head> always writes data-theme, so this
+   single block covers both the OS preference and a manual choice, and there is
+   no duplicated palette to keep in sync. Category hues are darkened here:
+   the dark-theme tints are far too light to pass AA on white. */
+:root[data-theme="light"] {
+  --bg:            #f5f7fa;
+  --bg-band:       #ffffff;
+  --bg-lift:       rgba(16, 24, 40, 0.028);
+  --bg-lift-hover: rgba(16, 24, 40, 0.058);
+  --border:        #e3e8f0;
+  --border-strong: #c7d0de;
+
+  --text:          #151b27;
+  --text-soft:     #3e4859;
+  --text-muted:    #586274;
+
+  --problem:       #5b3cc4;
+  --system:        #12608f;
+  --capability:    #146346;
+
+  --dim:           0.42;
+  --pill-glow:     0 1px 4px color-mix(in srgb, var(--accent) 26%, transparent);
+
+  color-scheme: light;
+}
+
+/* Per-kind colour tokens. Everything downstream reads --accent. */
+.k-problem    { --accent: var(--problem); }
+.k-system     { --accent: var(--system); }
+.k-capability { --accent: var(--capability); }
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+}
+
+a { color: inherit; }
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  padding: 10px 16px;
+  background: var(--bg-band);
+  border: 1px solid var(--border-strong);
+  border-radius: 0 0 8px 0;
+  z-index: 50;
+}
+.skip-link:focus { left: 0; }
+
+:focus-visible {
+  outline: 2px solid var(--system);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---------------------------------------------------------------- header -- */
+
+.site-header {
+  padding: clamp(22px, 3.4vw, 38px) var(--gutter) 20px;
+  /* Avatar, name and actions share the top row. The tagline sits on a second
+     row but starts in the name's column, so it stays visually attached to the
+     name exactly as it did before the actions moved in, while still having the
+     full width it needs to stay on one line. */
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  /* Default: the tagline runs under the controls and keeps the full width, so
+     it stays on one line down to about 894px. The controls sit on the top row.
+     See the 1400px rule below for why this is not the layout everywhere. */
+  grid-template-areas:
+    "avatar name    actions"
+    ".      tagline tagline";
+  align-items: center;
+  gap: 6px 18px;
+}
+
+/* Symmetry and a one-line tagline pull in opposite directions: centring the
+   avatar and the controls against both text lines means they occupy the second
+   row, which takes the width the tagline needs. Neither can win everywhere.
+   Above 1400px there is room for both, so the header goes symmetric: avatar and
+   controls span both rows and centre on the text block. Below it, the single
+   line wins and the controls stay on the top row.
+   1397px is the measured threshold, rounded up. */
+@media (min-width: 1400px) {
+  .site-header {
+    grid-template-areas:
+      "avatar name    actions"
+      "avatar tagline actions";
+  }
+}
+
+/* The wrapper hands the avatar and the name straight to the header grid, so the
+   tagline can align to the name's column without being nested inside it. */
+.identity { display: contents; }
+
+/* The avatar is also the way back to the start panel, so it is a real button
+   with the chrome stripped off rather than a click handler on an image. */
+.identity__home {
+  display: block;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  background: none;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.identity__avatar {
+  display: block;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border-strong);
+  transition: border-color 200ms var(--ease), box-shadow 200ms var(--ease);
+}
+
+/* Quiet affordance: it should read as clickable without shouting. */
+.identity__home:hover .identity__avatar {
+  border-color: var(--system);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--system) 18%, transparent);
+}
+
+.identity__home:focus-visible { outline-offset: 4px; }
+
+.identity__home { grid-area: avatar; }
+.identity__name { grid-area: name; }
+.identity__tagline { grid-area: tagline; }
+
+/* Right-hand header slot: tour buttons and the theme toggle. */
+.header-actions {
+  grid-area: actions;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.tours {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tour-btn {
+  appearance: none;
+  margin: 0;
+  padding: 8px 15px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text-soft);
+  background: var(--bg-lift);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 180ms var(--ease), background-color 180ms var(--ease),
+              border-color 180ms var(--ease);
+}
+
+.tour-btn:hover {
+  color: var(--text);
+  background: var(--bg-lift-hover);
+  border-color: color-mix(in srgb, var(--system) 55%, var(--border-strong));
+}
+
+.tour-btn.is-running {
+  color: var(--system);
+  border-color: var(--system);
+  background: color-mix(in srgb, var(--system) 12%, transparent);
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  color: var(--text-soft);
+  background: var(--bg-lift);
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 200ms var(--ease), color 200ms var(--ease),
+              border-color 200ms var(--ease);
+}
+
+.icon-btn:hover {
+  color: var(--text);
+  background: var(--bg-lift-hover);
+  border-color: var(--system);
+}
+
+/* Show the theme you would switch to, not the one you are in. */
+.icon--moon { display: none; }
+:root[data-theme="light"] .icon--sun { display: none; }
+:root[data-theme="light"] .icon--moon { display: block; }
+
+.identity__name {
+  /* The tagline is its own grid row now, so the gap handles the spacing. */
+  margin: 0;
+  font-size: clamp(21px, 2.3vw, 27px);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+/* No max-width: the tagline is a header line, not body copy, so it runs full
+   width and stays on one line wherever there is room. It still wraps on its
+   own once the viewport is too narrow. */
+.identity__tagline {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 14.5px;
+  text-wrap: pretty;
+}
+
+/* ---------------------------------------------------------------- layout -- */
+
+.layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--panel-w);
+  align-items: start;
+  gap: 22px;
+  padding: 6px var(--gutter) 40px;
+}
+
+.map {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* Connector overlay. Sits above the bands and ignores the mouse entirely, so
+   pills stay clickable straight through it. */
+.connectors {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.connector {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  opacity: 0.34;
+}
+
+/* Unreadable at phone width, and hiding them costs nothing. */
+@media (max-width: 767px) {
+  .connectors { display: none; }
+}
+
+/* ----------------------------------------------------------------- bands -- */
+
+.band {
+  background: var(--bg-band);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px clamp(16px, 2vw, 26px) 24px;
+}
+
+.band__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin-bottom: 16px;
+}
+
+.band__label {
+  font-size: 11.5px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--accent);
+}
+
+.band__descriptor {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.band__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+/* ----------------------------------------------------------------- pills -- */
+
+.pill {
+  --pill-border: var(--border-strong);
+  appearance: none;
+  margin: 0;
+  padding: 9px 17px;
+  font: inherit;
+  text-align: left;
+  color: var(--text);
+  background: var(--bg-lift);
+  border: 1px solid var(--pill-border);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: opacity 220ms var(--ease), border-color 220ms var(--ease),
+              background-color 220ms var(--ease), box-shadow 220ms var(--ease),
+              transform 220ms var(--ease);
+}
+
+.pill:hover {
+  background: var(--bg-lift-hover);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border-strong));
+}
+
+.pill__name {
+  display: block;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+/* Selection states */
+.pill.is-active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent),
+              var(--pill-glow);
+}
+
+.pill.is-related {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border-strong));
+  background: var(--bg-lift-hover);
+}
+
+.pill.is-dimmed { opacity: var(--dim); }
+.pill.is-dimmed:hover { opacity: 0.8; }
+
+/* ----------------------------------------------------------------- panel -- */
+
+.panel {
+  position: sticky;
+  top: 16px;
+  align-self: start;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--bg-band);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px clamp(18px, 1.6vw, 24px) 26px;
+}
+
+.panel__kicker {
+  font-size: 11px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--accent, var(--text-muted));
+  margin: 0 0 8px;
+}
+
+.panel__title {
+  margin: 0 0 10px;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.28;
+  letter-spacing: -0.01em;
+}
+
+.panel__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.panel__meta .dot { opacity: 0.45; }
+
+.panel__hook {
+  margin: 0 0 16px;
+  color: var(--text-soft);
+  font-size: 14.5px;
+}
+
+/* Result: visually emphasised. This is the payload. */
+.panel__result {
+  margin: 0 0 20px;
+  padding: 14px 16px;
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
+  border-left: 3px solid var(--accent);
+  border-radius: 10px;
+}
+
+.panel__result-label {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--accent);
+  margin-bottom: 5px;
+}
+
+.panel__result-text {
+  display: block;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.panel__section { margin-bottom: 18px; }
+
+.panel__section-label {
+  font-size: 10.5px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+  margin: 0 0 9px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.chip {
+  padding: 4px 11px;
+  font-size: 12.5px;
+  color: var(--text-soft);
+  background: var(--bg-lift);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+}
+
+/* Clickable "Connected to" chips carry their own target-band colour. */
+.chip--link {
+  appearance: none;
+  margin: 0;
+  font-family: inherit;
+  cursor: pointer;
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--border-strong));
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  transition: background-color 180ms var(--ease), border-color 180ms var(--ease);
+}
+
+.chip--link:hover {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  border-color: var(--accent);
+}
+
+.panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 20px;
+}
+
+.btn {
+  display: inline-block;
+  padding: 9px 16px;
+  font-size: 13.5px;
+  text-decoration: none;
+  border-radius: 9px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-lift);
+  color: var(--text);
+  transition: background-color 180ms var(--ease), border-color 180ms var(--ease);
+}
+
+.btn:hover { background: var(--bg-lift-hover); border-color: var(--accent); }
+
+.btn--primary {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border-strong));
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+}
+
+.btn--primary:hover {
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.panel__clear {
+  appearance: none;
+  margin-top: 22px;
+  padding: 0;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  background: none;
+  border: 0;
+  border-bottom: 1px dashed var(--border-strong);
+  cursor: pointer;
+}
+
+.panel__clear:hover { color: var(--text-soft); }
+
+/* ------------------------------------------------------------- tour mode -- */
+
+.tour-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 12px;
+  margin-bottom: 10px;
+}
+
+.tour-bar__name {
+  font-size: 11px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--system);
+}
+
+.tour-bar__count {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.tour-say {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--text);
+  background: color-mix(in srgb, var(--system) 8%, transparent);
+  border-left: 3px solid var(--system);
+  border-radius: 0 10px 10px 0;
+}
+
+.tour-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  /* Sits directly under the step counter, not at the foot of the panel, so
+     Next is visible without scrolling past the whole case. */
+  margin: 0 0 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tour-nav__spacer { flex: 1 1 auto; }
+
+.tour-nav .btn[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Default "Start anywhere" state */
+.intro__lede {
+  margin: 0 0 16px;
+  color: var(--text-soft);
+  font-size: 14.5px;
+}
+
+.intro__bands {
+  list-style: none;
+  margin: 0 0 20px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.intro__bands li {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  padding-left: 13px;
+  border-left: 2px solid var(--accent, var(--border-strong));
+}
+
+.intro__bands strong {
+  display: block;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 13.5px;
+}
+
+.intro__prompt {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+
+/* ---------------------------------------------------------------- footer -- */
+
+.site-footer {
+  padding: 22px var(--gutter) 34px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+}
+
+.site-footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  font-size: 13.5px;
+}
+
+.site-footer__links a {
+  color: var(--text-soft);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border-strong);
+  padding-bottom: 1px;
+}
+
+.site-footer__links a:hover { color: var(--text); border-bottom-color: var(--system); }
+
+.site-footer__note {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+/* ------------------------------------------------------------ responsive --
+   Three layouts:
+     >= 1100px   map left, panel right (the base rules above)
+     768 - 1099  panel becomes a bottom sheet over the map
+     <= 767      panel becomes a full-screen detail view with a back button
+   -------------------------------------------------------------------------- */
+
+/* Shown only where the panel covers the map and needs its own way out. */
+.panel__back {
+  display: none;
+  appearance: none;
+  align-items: center;
+  margin: 0 0 14px;
+  padding: 8px 15px;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--text-soft);
+  background: var(--bg-lift);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+.panel__back:hover { color: var(--text); background: var(--bg-lift-hover); }
+
+@keyframes sheet-in {
+  from { transform: translateY(16px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@media (max-width: 1099px) {
+  .layout {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-bottom: 40px;
+  }
+
+  /* Nothing selected: the intro is the landing content, so it comes first
+     instead of sitting below three bands where a phone visitor never sees it. */
+  .panel {
+    order: -1;
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+
+  /* Something selected: the panel leaves the flow and covers the map. */
+  body.has-selection .panel {
+    order: 0;
+    position: fixed;
+    /* The desktop column is sticky with top: 16px. That has to be cleared or
+       the sheet anchors to the top of the viewport instead of the bottom. */
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    max-height: 64vh;
+    overflow-y: auto;
+    border-width: 1px 0 0;
+    border-radius: 18px 18px 0 0;
+    padding-bottom: calc(26px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -20px 44px -22px rgba(0, 0, 0, 0.5);
+    animation: sheet-in 260ms var(--ease);
+  }
+
+  /* Let the bands scroll clear of the sheet rather than hide behind it. */
+  body.has-selection .layout { padding-bottom: 68vh; }
+
+  body.has-selection .panel__back { display: inline-flex; }
+
+  /* The back button replaces it. Two exits in one panel is one too many. */
+  body.has-selection .panel__clear { display: none; }
+}
+
+@media (max-width: 767px) {
+  /* Full screen, so the detail is readable instead of crammed into a strip. */
+  body.has-selection { overflow: hidden; }
+
+  body.has-selection .panel {
+    top: 0;
+    height: 100vh;
+    height: 100dvh;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+    padding-top: 18px;
+    animation: none;
+  }
+
+  body.has-selection .layout { padding-bottom: 40px; }
+
+  /* Avatar and name share the top row with the toggle; the tagline drops to a
+     full-width row of its own. `display: contents` lets the nested identity
+     wrappers hand their children straight to this grid, so the markup stays
+     one sensible order for screen readers and no element is duplicated. */
+  .site-header {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "avatar name    toggle"
+      "tag    tag     tag"
+      "tours  tours   tours";
+    gap: 10px 12px;
+  }
+
+  /* Both wrappers hand their children straight to this grid, so the tours can
+     take a full row of their own without duplicating any markup. */
+  /* Both wrappers hand their children to this grid so the tours can take a full
+     row of their own without duplicating any markup. */
+  .identity,
+  .header-actions { display: contents; }
+
+  .identity__home { grid-area: avatar; }
+  .identity__name { grid-area: name; }
+  .identity__tagline { grid-area: tag; }
+  .tours { grid-area: tours; }
+  #theme-toggle { grid-area: toggle; }
+
+  .identity__avatar { width: 46px; height: 46px; }
+
+  .band { padding: 18px 15px 20px; }
+  .site-footer { flex-direction: column; align-items: flex-start; gap: 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
