@@ -332,7 +332,17 @@
     if (node.kind === "system") {
       var actions = el("div", "panel__actions");
 
-      if (node.notion) {
+      /* A case is read on this site once its page has been generated from
+         Notion, and on Notion until then. Rolling out one page at a time
+         means the two states have to coexist, so the list drives the link
+         rather than a flag day. */
+      var built = (DATA.casePages || []).indexOf(node.id) !== -1;
+
+      if (built) {
+        var pageLink = el("a", "btn btn--primary", "Full case study →");
+        pageLink.href = "cases/" + node.id + ".html";
+        actions.appendChild(pageLink);
+      } else if (node.notion) {
         var caseLink = el("a", "btn btn--primary", "Full case study →");
         caseLink.href = node.notion;
         caseLink.target = "_blank";

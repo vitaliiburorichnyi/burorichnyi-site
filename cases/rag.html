@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAG Support Knowledge Agent - Vitalii Burorichnyi</title>
+<meta name="description" content="Rebuilt a support agent from hardcoded prompt rules into retrieval over a versioned knowledge base: grounded, cited, and measured.">
+<link rel="icon" href="../avatar.png">
+<link rel="apple-touch-icon" href="../avatar.png">
+
+<!-- Same pre-paint theme script as the map, so moving between them never flashes. -->
+<script>
+  (function () {
+    var stored = null;
+    try { stored = localStorage.getItem("theme"); } catch (e) { /* blocked */ }
+    var theme = (stored === "light" || stored === "dark") ? stored
+      : (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>
+
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="../case.css">
+</head>
+<body class="case-body">
+
+<header class="case-header">
+  <a class="case-back" href="../#rag">
+    <img src="../avatar.png" alt="" width="36" height="36">
+    <span>Back to the map</span>
+  </a>
+  <button id="theme-toggle" class="icon-btn" type="button" aria-label="Switch to light theme">
+    <svg class="icon icon--sun" viewBox="0 0 24 24" width="18" height="18" fill="none"
+         stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.2 5.2l1.5 1.5M17.3 17.3l1.5 1.5M18.8 5.2l-1.5 1.5M6.7 17.3l-1.5 1.5"/>
+    </svg>
+    <svg class="icon icon--moon" viewBox="0 0 24 24" width="18" height="18" fill="none"
+         stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M20.1 14.3A8.2 8.2 0 0 1 9.7 3.9a8.6 8.6 0 1 0 10.4 10.4Z"/>
+    </svg>
+  </button>
+</header>
+
+<main class="case">
+  <p class="eyebrow">Case study</p>
+  <h1>RAG Support Knowledge Agent</h1>
+  <p class="subtitle">Retrieval-Augmented Answers over a Versioned Knowledge Base, with a Measured Eval Suite</p>
+
+  <div class="case-meta">
+    <span>Solo build</span>
+    <span>n8n</span><span>Supabase pgvector</span><span>OpenAI embeddings</span><span>Claude Sonnet 4.6</span><span>Postgres</span>
+  </div>
+
+  <div class="case-body-text">
+<h2>Context</h2>
+<p><strong>Type:</strong> Self-initiated rebuild of <a href="https://app.notion.com/p/37370072ce928073b947e35b25dce33e" target="_blank" rel="noopener noreferrer">Case #01</a> - built and published as an open repository<br><strong>Built:</strong> July 2026, shipped 29.07.2026<br><strong>Base system:</strong> the existing Gmail P1-P4 support triage from Case #01<br><strong>Core problem:</strong> the original agent answered from hardcoded prompt rules - it could not be updated without editing the prompt, and it had no way to say &quot;I don't know&quot;</p>
+<p>This is not a standalone demo. It replaces the answer step inside a working email-support workflow, which is what makes the escalation logic and the logging matter - a wrong answer would have gone to a real inbox.</p>
+<hr>
+<h2>Problem</h2>
+<div class="table-wrap"><table><tr><th scope="col">Aspect</th><th scope="col">Before</th><th scope="col">Why it breaks</th></tr><tr><td>Answer source</td><td>Hardcoded rules inside one large prompt</td><td>Policy change means editing and re-testing the prompt</td></tr><tr><td>Coverage awareness</td><td>None</td><td>Unanswerable questions get a confident guess instead of a handoff</td></tr><tr><td>Traceability</td><td>None</td><td>No way to tell which source produced an answer</td></tr><tr><td>Quality measurement</td><td>Manual spot checks</td><td>&quot;It seems fine&quot; is not a baseline you can regress against</td></tr><tr><td>Knowledge updates</td><td>Manual prompt edit</td><td>Stale information stays live until someone remembers</td></tr></table></div>
+<p>The failure mode that matters commercially: a support agent that invents a refund policy costs more than one that stays silent. The original system had no mechanism to stay silent.</p>
+<hr>
+<h2>Solution</h2>
+<p>A three-part pipeline - ingestion, retrieval, evaluation - wired into the live email workflow.</p>
+<pre><code>INGESTION (on every KB doc change)
+Drive folder -&gt; extract text -&gt; delete stale chunks by doc_id
+            -&gt; heading-aware chunking (2000 chars, 15% overlap)
+            -&gt; embed -&gt; Supabase pgvector
+
+RETRIEVAL (per incoming email)
+Gmail -&gt; classify P1-P4 -&gt; embed question -&gt; top-5 cosine search
+      -&gt; build context + confidence check
+      -&gt; Claude answers ONLY from retrieved context
+      -&gt; confident? cited answer : escalate to human
+      -&gt; log query, chunks, scores, answer  (BEFORE any send)
+      -&gt; P1-P4 routing: draft / auto-send / label
+
+EVAL (on demand)
+30-question golden set -&gt; full pipeline -&gt; Claude judge
+      -&gt; grounded? correct? escalated correctly?
+      -&gt; eval_results pass-rate table</code></pre>
+<h3>Ingestion</h3>
+<p>A Drive-triggered workflow watches the knowledge base folder. On any new or edited file: download, extract, chunk on markdown headings, embed, <strong>delete that document's old chunks</strong>, insert the new ones. Editing a policy document and saving it fully refreshes the vector store with no manual re-indexing and no orphaned chunks left searchable beside the new version.</p>
+<h3>Retrieval</h3>
+<p>The customer question is embedded and matched against the top 5 chunks by cosine similarity. Claude answers <strong>only</strong> from what came back, citing the source document by name. If any part of the question isn't covered, the whole reply escalates rather than mixing a real answer with a gap.</p>
+<h3>Evaluation</h3>
+<p>30 golden question-answer pairs - 21 answerable, 9 deliberately outside the knowledge base - run through the full pipeline and are judged by Claude against the <strong>actual retrieved context</strong>, not a summary of it, on three separate axes: grounded, correct, and escalated correctly.</p>
+<hr>
+<h2>Engineering decisions</h2>
+<h3>1. Heading-aware chunking, not fixed-size</h3>
+<p>Policy documents have semantic boundaries. A &quot;Refund timing&quot; section split mid-sentence produces two chunks that are each individually misleading. Chunking on markdown headings at 2000 characters with 15% overlap keeps a policy intact.</p>
+<h3>2. pgvector over a dedicated vector database</h3>
+<p>The data already lives in Postgres. Plain SQL, HNSW index, self-hostable, no additional vendor. A dedicated vector store starts winning past roughly 10M vectors; this knowledge base is in the low thousands.</p>
+<h3>3. The escalation threshold is measured, not guessed</h3>
+<div class="table-wrap"><table><tr><th scope="col">Question type</th><th scope="col">Cosine distance range</th></tr><tr><td>Answerable</td><td>0.36 - 0.67</td></tr><tr><td>Out of knowledge base</td><td>0.59 - 0.74</td></tr></table></div>
+<p>The threshold sits at 0.65. The 0.59-0.67 band overlaps by construction - no single hard threshold separates them perfectly. That is a documented trade-off with the distribution behind it, not a number picked because it looked reasonable.</p>
+<h3>4. Log before you send</h3>
+<p>Every request - question, retrieved chunk titles and scores, final answer, escalation reason - writes to <code>retrieval_logs</code> <strong>before</strong> any Gmail action runs. A failure on the Gmail side can never erase the audit trail of what the system decided.</p>
+<h3>5. Retrieved context is data, never instructions</h3>
+<p>Both the retrieved chunks and the customer's own email are passed to the model as data. The system prompt is fixed and cannot be overridden by content inside a chunk or inside a customer message.</p>
+<hr>
+<h2>Results</h2>
+<div class="table-wrap"><table><tr><th scope="col">Measure</th><th scope="col">Result</th><th scope="col">What it means</th></tr><tr><td>Answerable questions correct</td><td><strong>20 / 21 - 95%</strong></td><td>Answers match the knowledge base</td></tr><tr><td>Answers grounded in retrieved source</td><td><strong>21 / 21 - 100%</strong></td><td>Nothing invented beyond the retrieved context</td></tr><tr><td>Out-of-KB questions escalated</td><td><strong>9 / 9 - 100%</strong></td><td>The system knows what it does not know</td></tr><tr><td>Knowledge base updates</td><td>Edit the doc, save</td><td>No prompt editing, no manual re-index</td></tr><tr><td>Auditability</td><td>Every retrieval logged</td><td>Queryable in Postgres, not a black box</td></tr></table></div>
+<p>The full per-question table, the two documented edge cases, and the three-iteration methodology story are published in <code>eval_results.md</code> in the repository.</p>
+<p><strong>Worth reading in that file:</strong> the eval process found three separate problems - a mislabeled golden question, a real model inference gap, and a bug in the judge design itself. All three are written up rather than quietly fixed. A drop in accuracy while groundedness held at 100% is arithmetically impossible if the judge is sound, and that contradiction is what exposed the judge bug.</p>
+<hr>
+<h2>Tech Stack</h2>
+<div class="table-wrap"><table><tr><th scope="col">Layer</th><th scope="col">Choice</th><th scope="col">Why</th></tr><tr><td>Vector database</td><td>Supabase - Postgres + pgvector, HNSW, cosine</td><td>Data already in Postgres, plain SQL, self-hostable</td></tr><tr><td>Embeddings</td><td>OpenAI <code>text-embedding-3-small</code></td><td>1536 dimensions, cheap, standard</td></tr><tr><td>Generation and judge</td><td>Claude Sonnet 4.6</td><td>Already used elsewhere in this support system</td></tr><tr><td>Orchestration</td><td>n8n native LangChain nodes</td><td>Whole pipeline without a custom backend</td></tr><tr><td>Observability</td><td>Supabase <code>retrieval_logs</code>, <code>eval_results</code></td><td>Every request and eval run is queryable</td></tr></table></div>
+<hr>
+<h2>What works</h2>
+<ul><li>Answers are generated from a versioned knowledge base and cite their source document</li><li>Editing a knowledge base document refreshes the vector store automatically, with stale chunks deleted by <code>doc_id</code></li><li>Questions outside the knowledge base escalate to a human instead of being guessed at</li><li>A mixed email - one covered question, one uncovered - escalates as a whole rather than returning a partial answer beside a gap</li><li>Every retrieval is logged before any outbound action, so the audit trail survives a downstream failure</li><li>The evaluation set can be re-run after any change to see immediately what broke</li></ul>
+<hr>
+<h2>Known limitations, handled honestly</h2>
+<ul><li><strong>Threshold overlap zone.</strong> Answerable questions score 0.36-0.67; out-of-KB questions score 0.59-0.74. The overlapping band is ambiguous by construction and no single threshold separates it cleanly.</li><li><strong>Guardrails overcorrect.</strong> Tightening the anti-hallucination instruction to close one gap introduced a one-question regression elsewhere. Real systems trade one failure mode for another; the work is measuring the trade, not assuming the fix is free.</li><li><strong>Silent parameter corruption in Postgres logging.</strong> n8n's comma-separated <code>queryReplacement</code> shorthand splits on <em>any</em> comma in the resolved string - including commas inside ordinary customer text - silently shifting every parameter after it. Fixed by passing a single array-valued expression. Found through testing with realistic input, not theorised.</li></ul>
+<hr>
+<h2>What I would do at 10× scale</h2>
+<ol><li>Re-ranking on top of the vector search</li><li>Hybrid keyword + vector search for exact-match terms like SKUs and order numbers</li><li>Per-tenant namespaces if this served multiple stores</li><li>Nightly scheduled eval runs with alerting on pass-rate drift</li></ol>
+<hr>
+<h2>GitHub Repository</h2>
+<p>🔗 <a href="https://github.com/vitaliiburorichnyi/rag-support-agent" target="_blank" rel="noopener noreferrer">https://github.com/vitaliiburorichnyi/rag-support-agent</a></p>
+<p>Includes <code>schema.sql</code>, the three n8n workflow exports, the 10 knowledge base source documents, and the full eval results table.</p>
+  </div>
+
+  <div class="case-links"><a class="btn" href="https://app.notion.com/p/3b570072ce9281c18933e035a1efb68c" target="_blank" rel="noopener noreferrer">Read the original on Notion</a><a class="btn" href="https://github.com/vitaliiburorichnyi/rag-support-agent" target="_blank" rel="noopener noreferrer">Code on GitHub</a></div>
+</main>
+
+<script src="../case.js"></script>
+</body>
+</html>
