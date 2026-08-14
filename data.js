@@ -254,6 +254,12 @@ window.PORTFOLIO_DATA = {
       label: "Discovery & process mapping",
       blurb:
         "Mapping the current process and its exceptions before automating any of it, because automating the wrong process is worse than leaving it manual."
+    },
+    {
+      id: "idempotency",
+      label: "Idempotency & safe retries",
+      blurb:
+        "Alert state and processed-event ids live on the record itself, so a retry, a resent webhook or a second run repeats nothing it has already done."
     }
   ],
 
@@ -405,6 +411,34 @@ window.PORTFOLIO_DATA = {
       result:
         "Manual weekly CRM review eliminated. At-risk deals flagged automatically.",
       notion: "https://app.notion.com/p/36870072ce928022b845c7f4b5e97afe",
+      github: null
+    },
+    {
+      id: "stale-deals",
+      name: "Stale Deal Alerts with Escalation",
+      team: "solo",
+      problems: ["no-visibility"],
+      capabilities: ["escalation", "crm", "idempotency"],
+      stack: ["n8n", "HubSpot", "Slack", "n8n Data Table"],
+      hook:
+        "Checks every open proposal daily, nudges the owning rep in Slack after three quiet working days, and escalates to the manager on day five.",
+      result:
+        "~90 min/week of manual review removed (~75+ hrs/year). Cooling deals surfaced 5x sooner. An immediate re-run produces zero repeat pings.",
+      notion: "https://app.notion.com/p/3bc70072ce92811b9c8ee6068bd3ee80",
+      github: null
+    },
+    {
+      id: "enrollment",
+      name: "Enrollment Automation with Idempotency",
+      team: "solo",
+      problems: ["manual-entry"],
+      capabilities: ["crm", "error-handling", "idempotency"],
+      stack: ["n8n", "Stripe", "HubSpot", "Slack", "Google Sheets"],
+      hook:
+        "One Stripe checkout drives the contact, deal, welcome list, instructor DM and ops log in a single run, behind a dedup check that runs before any write.",
+      result:
+        "10-15 min of manual work removed per enrollment. A resent event produces zero output. Reading the response body caught three silent failures during the build.",
+      notion: "https://app.notion.com/p/3bc70072ce9281f9a3cff87234576969",
       github: null
     },
     {
