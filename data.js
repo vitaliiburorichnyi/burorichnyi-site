@@ -192,6 +192,12 @@ window.PORTFOLIO_DATA = {
         "Calls outside working hours, or during a busy hour, ring out and never become a customer."
     },
     {
+      id: "compliance-blind",
+      label: "Nobody knows what expires",
+      blurb:
+        "Licences, certifications and renewals live in inboxes and people's heads, so a lapse is found by accident rather than reported."
+    },
+    {
       id: "too-much-to-read",
       label: "Too much to read",
       blurb:
@@ -261,6 +267,12 @@ window.PORTFOLIO_DATA = {
         "Mapping the current process and its exceptions before automating any of it, because automating the wrong process is worse than leaving it manual."
     },
     {
+      id: "derived-state",
+      label: "Derived state & scheduled checks",
+      blurb:
+        "Status calculated from the data rather than typed by a person, and a time-driven job to report it, because a condition-based trigger never fires on the day a date quietly passes."
+    },
+    {
       id: "idempotency",
       label: "Idempotency & safe retries",
       blurb:
@@ -289,6 +301,21 @@ window.PORTFOLIO_DATA = {
         "30-question golden set, LLM-judged: 95% correct, 100% grounded, 100% of out-of-scope questions escalated to a human.",
       notion: "https://app.notion.com/p/3b570072ce9281c18933e035a1efb68c",
       github: "https://github.com/vitaliiburorichnyi/rag-support-agent"
+    },
+    {
+      id: "licensure-directory",
+      name: "Staff & Licensure Directory",
+      team: "solo",
+      year: 2026,
+      problems: ["compliance-blind", "manual-entry"],
+      capabilities: ["derived-state", "discovery"],
+      stack: ["Airtable", "Notion"],
+      hook:
+        "A staff directory built around the question a telemedicine practice actually needs answered: who can legally see a patient in which state, and whose licence is about to lapse.",
+      result:
+        "A lapsed licence stops being found by chance and becomes reported every morning. Nine consecutive daily runs, every status branch exercised including the no-expiry case.",
+      notion: "https://app.notion.com/p/3c370072ce9281f48c81d83c202b565a",
+      github: null
     },
     {
       id: "email-support",

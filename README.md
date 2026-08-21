@@ -1,6 +1,6 @@
 # burorichnyi.com
 
-An interactive map of thirteen published AI automation systems built for support, sales and operations
+An interactive map of fourteen published AI automation and operations systems built for support, sales and operations
 work.
 
 Three labelled bands: the problems businesses actually arrive with, the systems built to solve them,
