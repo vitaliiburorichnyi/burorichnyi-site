@@ -19,8 +19,8 @@
   })();
 </script>
 
-<link rel="stylesheet" href="../styles.css">
-<link rel="stylesheet" href="../case.css">
+<link rel="stylesheet" href="../styles.css?v=6ruha1">
+<link rel="stylesheet" href="../case.css?v=a7bmt2">
 </head>
 <body class="case-body">
 
@@ -66,18 +66,22 @@
 <hr>
 <h2>Solution</h2>
 <p>An Airtable base modelling staff and licences as separate linked tables, with expiry calculated rather than remembered.</p>
-<pre><code>STAFF ─┬─ name, role, status, employment type, contact, address, manager
+<pre><code>STAFF ─┬─ name, role, status, employment type, contact, address
        │
-       └─&lt; LICENCES        one staff member, many licences
-            ├─ type        MD · DO · NP · RN · LCSW · PsyD · DEA · CPR/BLS
-            ├─ state       CA · NV · AZ · OR · WA
-            ├─ expiry date
-            ├─ Days Until Expiry   DATETIME_DIFF({Expiry Date}, TODAY(), 'days')
-            └─ Status              expired / 30 days / 90 days / valid / no expiry on file
-                    │
-                    ├──▶ VIEW  &quot;Action Needed&quot;   Days Until Expiry &lt; 90, sorted ascending
-                    │
-                    └──▶ AUTOMATION  daily 08:00  →  find records &lt; 30 days  →  send email</code></pre>
+       └─&lt; LICENCES      one staff member, many licences
+            ├─ type   MD · DO · NP · RN · LCSW · PsyD · DEA · CPR/BLS
+            ├─ state  CA · NV · AZ · OR · WA
+            ├─ issue date, expiry date
+            ├─ Days Until Expiry
+            │     DATETIME_DIFF({Expiry Date}, TODAY(), 'days')
+            └─ Status
+                  expired / 30 days / 90 days / valid / no expiry
+                      │
+                      ├──▶ VIEW  &quot;Action Needed&quot;
+                      │      Days Until Expiry &lt; 90, sorted ascending
+                      │
+                      └──▶ AUTOMATION  daily 08:00
+                             find records &lt; 30 days → send email</code></pre>
 <ul><li><strong>Two linked tables</strong>, so one clinician can hold licences in several states without duplicating the person</li><li><strong>Status is derived, not typed.</strong> Nobody has to remember to mark a licence expired</li><li><strong>A fourth branch for no expiry on file</strong>, because real data always has gaps and a system should show the hole rather than hide it</li><li><strong>Nine views</strong>, of which the one that matters is licences expiring within 90 days</li><li><strong>A two page interface</strong> with counters, so it reads as an application rather than a spreadsheet</li><li><strong>A Notion hub</strong> with SOP, policy and vendor structure, embedding the roster live</li></ul>
 <p>The literal ask, delivered: name, role, contact, address, employment type and manager, grouped by role.</p>
 <figure><img src="../cases/assets/licensure-directory/14-01-active-roster.png" alt="" loading="lazy"></figure>
@@ -112,7 +116,7 @@
 <hr>
 <h2>Walkthrough</h2>
 <p>Four minutes through the live base: the roster, the licence view, the automation and its run history, the interface, and the Notion hub with the roster embedded.</p>
-<p class="walkthrough"><a href="https://www.youtube.com/watch?v=ROfB53WNi4w" target="_blank" rel="noopener noreferrer">Watch the walkthrough on YouTube</a></p>
+<figure class="video-embed"><a class="video-facade" href="https://www.youtube.com/watch?v=ROfB53WNi4w" data-video="ROfB53WNi4w" target="_blank" rel="noopener noreferrer" aria-label="Play the walkthrough"><img src="../cases/assets/licensure-directory/14-poster.jpg" alt="" loading="lazy"><span class="video-play" aria-hidden="true"></span></a></figure>
 <hr>
 <h2>Known gaps</h2>
 <ul><li><strong>Sample data only.</strong> Deliberate. Staff records in a healthcare organisation are personal data, so nothing real was ever entered.</li><li><strong>No self service form</strong>, where providers enter their own details and upload licence copies. That turned out to be the practice's top priority, and it surfaced during the demo, which is rather the point of showing something real early.</li><li><strong>Airtable cannot do custom fonts or exact brand hex codes.</strong> Flagged in writing before any commitment.</li><li><strong>Licence data is trusted, not verified.</strong> The base records what someone types. It does not check a licence against a state board, and a renewal tracker is only as good as the dates entered.</li></ul>
@@ -121,6 +125,6 @@
   <div class="case-links"><a class="btn" href="https://app.notion.com/p/3c370072ce9281f48c81d83c202b565a" target="_blank" rel="noopener noreferrer">Read the original on Notion</a></div>
 </main>
 
-<script src="../case.js"></script>
+<script src="../case.js?v=imn4j0"></script>
 </body>
 </html>

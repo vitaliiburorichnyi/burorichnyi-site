@@ -111,6 +111,13 @@ function table(lines) {
   return out + "</table></div>";
 }
 
+/* Poster frames for walkthrough videos, keyed by YouTube id. Local files, so
+   the facade costs no third-party request. Add a line when a case gains a
+   video; without one the block falls back to a plain link. */
+const POSTERS = {
+  ROfB53WNi4w: "cases/assets/licensure-directory/14-poster.jpg"
+};
+
 function loom(src) {
   /* Linked, not iframed. An iframe would be a third-party request on a page
      that otherwise makes none, and it cannot be lazy without script. */
@@ -123,13 +130,36 @@ function loom(src) {
     );
   }
   /* Walkthroughs moved to YouTube from case #14 on, because Loom's free plan
-     caps at 25 videos and will not export an MP4. Same treatment: a link. */
+     caps at 25 videos and will not export an MP4.
+
+     Embedded, but as a click-to-load facade: a local poster frame plus a play
+     button, swapped for the real iframe by case.js on click. It looks and
+     behaves like the Notion embed, and it keeps the promise the rest of the
+     page makes, that nothing is requested from a third party until the reader
+     actually asks for it. The poster is served from this domain. */
   const y = src.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=)([A-Za-z0-9_-]{6,})/i);
   if (y) {
+    const id = y[1];
+    const poster = POSTERS[id];
+    if (!poster) {
+      return (
+        '<p class="walkthrough"><a href="https://www.youtube.com/watch?v=' +
+        id +
+        '" target="_blank" rel="noopener noreferrer">Watch the walkthrough on YouTube</a></p>'
+      );
+    }
+    /* A real link, not a button. If case.js has not run, for any reason
+       including a stale cached copy, the click still reaches YouTube instead
+       of doing nothing. The script upgrades it to an inline player. */
     return (
-      '<p class="walkthrough"><a href="https://www.youtube.com/watch?v=' +
-      y[1] +
-      '" target="_blank" rel="noopener noreferrer">Watch the walkthrough on YouTube</a></p>'
+      '<figure class="video-embed">' +
+      '<a class="video-facade" href="https://www.youtube.com/watch?v=' + id + '" ' +
+      'data-video="' + id + '" target="_blank" rel="noopener noreferrer" ' +
+      'aria-label="Play the walkthrough">' +
+      '<img src="../' + poster + '" alt="" loading="lazy">' +
+      '<span class="video-play" aria-hidden="true"></span>' +
+      "</a>" +
+      "</figure>"
     );
   }
   return "";

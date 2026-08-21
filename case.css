@@ -286,3 +286,70 @@
   .case-body-text pre code { font-size: 0.74rem; }
   .case-body-text table { font-size: 0.82rem; }
 }
+
+/* ------------------------------------------------- walkthrough embed -- */
+
+/* Click-to-load. The poster is a local frame from the video, so the page
+   still makes no third-party request until the reader presses play. */
+
+.case-body-text .video-embed { margin: 0 0 26px; }
+
+.case-body-text .video-facade {
+  display: block;
+  position: relative;
+  width: 100%;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-band);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.case-body-text .video-facade img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 0;
+  border-radius: 0;
+}
+
+.case-body-text .video-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 68px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.65);
+  transition: background 120ms ease;
+}
+
+/* The triangle, drawn rather than shipped as an asset. */
+.case-body-text .video-play::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-40%, -50%);
+  border-style: solid;
+  border-width: 9px 0 9px 15px;
+  border-color: transparent transparent transparent #fff;
+}
+
+.case-body-text .video-facade:hover .video-play,
+.case-body-text .video-facade:focus-visible .video-play { background: #c00; }
+
+.case-body-text .video-facade:focus-visible {
+  outline: 2px solid var(--accent, #4c6ef5);
+  outline-offset: 2px;
+}
+
+.case-body-text .video-embed iframe {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1154 / 720;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}

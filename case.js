@@ -51,3 +51,22 @@
     else if (mq.addListener) mq.addListener(onChange);
   }
 })();
+
+/* Walkthrough embed. The page ships a poster and a play button; the YouTube
+   iframe is only created once the reader clicks, so a visitor who never plays
+   the video is never sent to a third party. */
+document.addEventListener("click", (e) => {
+  const facade = e.target.closest(".video-facade");
+  if (!facade) return;
+  const id = facade.dataset.video;
+  if (!id) return;
+  e.preventDefault();
+  const frame = document.createElement("iframe");
+  frame.src =
+    "https://www.youtube-nocookie.com/embed/" + id + "?autoplay=1&rel=0";
+  frame.title = "Walkthrough";
+  frame.allow =
+    "accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture";
+  frame.allowFullscreen = true;
+  facade.replaceWith(frame);
+});

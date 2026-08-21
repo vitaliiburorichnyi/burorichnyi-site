@@ -36,18 +36,22 @@ For a telemedicine practice the third row is the expensive one. Without it, a la
 ## ✅ Solution
 An Airtable base modelling staff and licences as separate linked tables, with expiry calculated rather than remembered.
 ```plain text
-STAFF ─┬─ name, role, status, employment type, contact, address, manager
+STAFF ─┬─ name, role, status, employment type, contact, address
        │
-       └─< LICENCES        one staff member, many licences
-            ├─ type        MD · DO · NP · RN · LCSW · PsyD · DEA · CPR/BLS
-            ├─ state       CA · NV · AZ · OR · WA
-            ├─ expiry date
-            ├─ Days Until Expiry   DATETIME_DIFF({Expiry Date}, TODAY(), 'days')
-            └─ Status              expired / 30 days / 90 days / valid / no expiry on file
-                    │
-                    ├──▶ VIEW  "Action Needed"   Days Until Expiry < 90, sorted ascending
-                    │
-                    └──▶ AUTOMATION  daily 08:00  →  find records < 30 days  →  send email
+       └─< LICENCES      one staff member, many licences
+            ├─ type   MD · DO · NP · RN · LCSW · PsyD · DEA · CPR/BLS
+            ├─ state  CA · NV · AZ · OR · WA
+            ├─ issue date, expiry date
+            ├─ Days Until Expiry
+            │     DATETIME_DIFF({Expiry Date}, TODAY(), 'days')
+            └─ Status
+                  expired / 30 days / 90 days / valid / no expiry
+                      │
+                      ├──▶ VIEW  "Action Needed"
+                      │      Days Until Expiry < 90, sorted ascending
+                      │
+                      └──▶ AUTOMATION  daily 08:00
+                             find records < 30 days → send email
 ```
 - **Two linked tables**, so one clinician can hold licences in several states without duplicating the person
 - **Status is derived, not typed.** Nobody has to remember to mark a licence expired

@@ -21,6 +21,21 @@ globalThis.window = {};
 new Function(Deno.readTextFileSync(ROOT + "data.js")).call(globalThis);
 const DATA = globalThis.window.PORTFOLIO_DATA;
 
+/* Cache-busting stamp. A case page is committed HTML served with far-future
+   caching by the host, so a change to case.css or case.js would otherwise not
+   reach a reader who has the old file. Hash the content, put it in the query. */
+function stamp(rel) {
+  let h = 0;
+  const t = Deno.readTextFileSync(ROOT + rel);
+  for (let i = 0; i < t.length; i++) h = (Math.imul(31, h) + t.charCodeAt(i)) | 0;
+  return (h >>> 0).toString(36);
+}
+const V = {
+  css: stamp("case.css"),
+  styles: stamp("styles.css"),
+  js: stamp("case.js")
+};
+
 const esc = (s) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
@@ -88,8 +103,8 @@ function page(sys, meta, body, subtitle) {
   })();
 </script>
 
-<link rel="stylesheet" href="../styles.css">
-<link rel="stylesheet" href="../case.css">
+<link rel="stylesheet" href="../styles.css?v=${V.styles}">
+<link rel="stylesheet" href="../case.css?v=${V.css}">
 </head>
 <body class="case-body">
 
@@ -128,7 +143,7 @@ ${body}
   <div class="case-links">${links.join("")}</div>
 </main>
 
-<script src="../case.js"></script>
+<script src="../case.js?v=${V.js}"></script>
 </body>
 </html>
 `;
