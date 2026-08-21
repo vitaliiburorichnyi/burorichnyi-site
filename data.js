@@ -103,6 +103,10 @@ window.PORTFOLIO_DATA = {
           say: "And the judgement that keeps it safe: anything customer-facing waits for a person to approve it."
         },
         {
+          kind: "system", id: "licensure-directory",
+          say: "Not every problem needs a model: this one is a schema and a scheduled check, built around the licensing question the brief never mentioned."
+        },
+        {
           kind: "contact",
           say: "That is the short version. The code is on GitHub, the full write-ups are in Notion, and I am reachable below."
         }
