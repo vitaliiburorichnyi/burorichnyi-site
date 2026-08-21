@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Telehealth Practice: Staff &amp; Licensure Directory - Vitalii Burorichnyi</title>
+<meta name="description" content="A staff directory built around the question a telemedicine practice actually needs answered: who can legally see a patient in which state, and whose licence is about to lapse.">
+<link rel="icon" href="../avatar.png">
+<link rel="apple-touch-icon" href="../avatar.png">
+
+<!-- Same pre-paint theme script as the map, so moving between them never flashes. -->
+<script>
+  (function () {
+    var stored = null;
+    try { stored = localStorage.getItem("theme"); } catch (e) { /* blocked */ }
+    var theme = (stored === "light" || stored === "dark") ? stored
+      : (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>
+
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="../case.css">
+</head>
+<body class="case-body">
+
+<header class="case-header">
+  <a class="case-back" href="../#licensure-directory">
+    <img src="../avatar.png" alt="" width="36" height="36">
+    <span>Back to the map</span>
+  </a>
+  <button id="theme-toggle" class="icon-btn" type="button" aria-label="Switch to light theme">
+    <svg class="icon icon--sun" viewBox="0 0 24 24" width="18" height="18" fill="none"
+         stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.2 5.2l1.5 1.5M17.3 17.3l1.5 1.5M18.8 5.2l-1.5 1.5M6.7 17.3l-1.5 1.5"/>
+    </svg>
+    <svg class="icon icon--moon" viewBox="0 0 24 24" width="18" height="18" fill="none"
+         stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M20.1 14.3A8.2 8.2 0 0 1 9.7 3.9a8.6 8.6 0 1 0 10.4 10.4Z"/>
+    </svg>
+  </button>
+</header>
+
+<main class="case">
+  <p class="eyebrow">Case study</p>
+  <h1>Telehealth Practice: Staff &amp; Licensure Directory</h1>
+  <p class="subtitle">Staff, State Licensure and Renewal Tracking for a US Telemedicine Practice</p>
+
+  <div class="case-meta">
+    <span>Solo build</span>
+    <span>Airtable</span><span>Notion</span>
+  </div>
+
+  <div class="case-body-text">
+<p>The brief was &quot;a database for my staff, address and phone number.&quot; That reading gives you one table of contact details, and it takes about fifteen minutes.</p>
+<p>But in US telemedicine a clinician may only treat a patient physically located in a state where that clinician holds a licence. So the staff database is not an address book. It is the thing that answers <strong>which clinicians can legally see a patient in Nevada next Tuesday, and whose licence is about to lapse.</strong> A lapsed licence is a compliance problem, not an admin annoyance.</p>
+<p>That is the reason this case exists. The contact details were built exactly as asked. The licensure model was built next to them, and the practice was invited to say it was too much.</p>
+<hr>
+<h2>Context</h2>
+<p><strong>Company:</strong> US telemedicine practice - remote behavioural health, small clinical team<br><strong>Systems:</strong> None in place. Staff details lived across documents and inboxes<br><strong>The ask:</strong> An Airtable database for staff (address, phone, etc.), plus a Notion hub to hold business information in one place<br><strong>Scope:</strong> Self-built demo with generated names for privacy. No real staff records at any point<br><strong>Core problem:</strong> Nothing held who works here, what they are licensed to do, and where that licence is valid</p>
+<hr>
+<h2>Problem</h2>
+<div class="table-wrap"><table><tr><th scope="col">Issue</th><th scope="col">Detail</th></tr><tr><td>No central provider database</td><td>Staff details were not held in any one system. Stated directly on the call: <em>&quot;we don't have a central database for providers&quot;</em></td></tr><tr><td>No operations hub</td><td><em>&quot;that central hub for operations. We don't have one&quot;</em></td></tr><tr><td>Licence visibility</td><td>Nothing surfaced which clinician was licensed in which state, or when a licence expired</td></tr><tr><td>Manual routine work</td><td>Staff were manually emailing patients and referrers for routine steps</td></tr></table></div>
+<p>For a telemedicine practice the third row is the expensive one. Without it, a lapsed licence is found when somebody happens to look, and the cost of not looking is a clinician seeing a patient they are not licensed to see.</p>
+<hr>
+<h2>Solution</h2>
+<p>An Airtable base modelling staff and licences as separate linked tables, with expiry calculated rather than remembered.</p>
+<pre><code>STAFF ─┬─ name, role, status, employment type, contact, address, manager
+       │
+       └─&lt; LICENCES        one staff member, many licences
+            ├─ type        MD · DO · NP · RN · LCSW · PsyD · DEA · CPR/BLS
+            ├─ state       CA · NV · AZ · OR · WA
+            ├─ expiry date
+            ├─ Days Until Expiry   DATETIME_DIFF({Expiry Date}, TODAY(), 'days')
+            └─ Status              expired / 30 days / 90 days / valid / no expiry on file
+                    │
+                    ├──▶ VIEW  &quot;Action Needed&quot;   Days Until Expiry &lt; 90, sorted ascending
+                    │
+                    └──▶ AUTOMATION  daily 08:00  →  find records &lt; 30 days  →  send email</code></pre>
+<ul><li><strong>Two linked tables</strong>, so one clinician can hold licences in several states without duplicating the person</li><li><strong>Status is derived, not typed.</strong> Nobody has to remember to mark a licence expired</li><li><strong>A fourth branch for no expiry on file</strong>, because real data always has gaps and a system should show the hole rather than hide it</li><li><strong>Nine views</strong>, of which the one that matters is licences expiring within 90 days</li><li><strong>A two page interface</strong> with counters, so it reads as an application rather than a spreadsheet</li><li><strong>A Notion hub</strong> with SOP, policy and vendor structure, embedding the roster live</li></ul>
+<p>The literal ask, delivered: name, role, contact, address, employment type and manager, grouped by role.</p>
+<figure><img src="../cases/assets/licensure-directory/14-01-active-roster.png" alt="" loading="lazy"></figure>
+<p>The view the design decision produced. One licence lapsed 28 days ago, one due in 8 days, one in 62.</p>
+<figure><img src="../cases/assets/licensure-directory/14-02-action-needed.png" alt="" loading="lazy"></figure>
+<hr>
+<h2>Build notes</h2>
+<p><strong>The alert has to be time triggered, not record triggered.</strong> This is the detail that separates a working build from a mockup. <code>Days Until Expiry</code> derives from <code>TODAY()</code>, so it changes by the clock rather than by a record edit. Airtable's &quot;when record matches conditions&quot; trigger would never fire, because nothing about the record changes on the day it crosses the threshold. The automation runs on a scheduled daily trigger instead.</p>
+<p><strong>Use TODAY(), not NOW().</strong> <code>NOW()</code> carries a time component, which produces fractional day noise and a field that recalculates constantly.</p>
+<p><strong>The data was seeded deliberately</strong> so every branch had something to show: one licence already expired, one at roughly 21 days, one at roughly 75, one clinician holding three state licences, and one with no expiry recorded at all.</p>
+<p><strong>Twelve days later, nobody had touched it.</strong> Those same three rows now read 28 days expired, 8 days and 62 days. The drift is the formula doing its job, and it is the clearest evidence the system is live rather than a screenshot.</p>
+<p><strong>Counter and grid use different thresholds on purpose.</strong> The interface reads &quot;Licences needing action: 2&quot; above a grid of three rows. The counter is scoped to 30 days, the grid to 90.</p>
+<figure><img src="../cases/assets/licensure-directory/14-03-interface-practice-operations.png" alt="" loading="lazy"></figure>
+<hr>
+<h2>One record, two systems</h2>
+<p>Staff records live in Airtable once. The Notion hub embeds the live view rather than keeping a second copy that quietly goes stale. Change a phone number in Airtable and it is changed in the hub.</p>
+<figure><img src="../cases/assets/licensure-directory/14-04-notion-hub-home.png" alt="" loading="lazy"></figure>
+<figure><img src="../cases/assets/licensure-directory/14-05-notion-staff-directory-embed.png" alt="" loading="lazy"></figure>
+<hr>
+<h2>Results</h2>
+<p>A lapsed licence stops being something found by chance and becomes something reported every morning. In telemedicine that is a compliance exposure rather than an admin one: a clinician may only treat a patient in a state where their licence is current, so the cost of not noticing is a treatment that should not have happened.</p>
+<ul><li><strong>Nine consecutive successful daily runs</strong> at 08:00, each one finding records and sending the renewal email</li><li><strong>Every status branch exercised</strong> by the sample data, including the no expiry case</li><li><strong>Expiry surfaced automatically</strong> rather than discovered. Three licences currently inside the 90 day window, ranked by urgency, with no human check involved</li></ul>
+<figure><img src="../cases/assets/licensure-directory/14-06-renewal-automation.png" alt="" loading="lazy"></figure>
+<hr>
+<h2>Tech stack</h2>
+<ul><li><strong>Airtable</strong> - linked tables, formula fields, nine views, Interface Designer, scheduled automation</li><li><strong>Notion</strong> - operations hub, SOP and policy structure, live Airtable embed</li></ul>
+<hr>
+<h2>What works</h2>
+<p>The obvious way a renewal tracker fails is that it becomes another dashboard nobody opens. Three things prevent that here:</p>
+<ul><li><strong>The alert comes to you.</strong> A daily email for anything inside 30 days, rather than a view somebody has to remember to check.</li><li><strong>The time trigger is correct.</strong> A condition based trigger looks fine in the editor and silently never fires. This one has fired every morning for nine days.</li><li><strong>Missing data is visible.</strong> A licence with no expiry on file shows as its own status rather than quietly counting as valid, which is how this kind of system usually lies to you.</li></ul>
+<p>Beyond that: status is derived so it cannot go stale, the roster lives in one system rather than being copied into two, and the interface gives a non technical owner a readable front door.</p>
+<hr>
+<h2>Walkthrough</h2>
+<p>Four minutes through the live base: the roster, the licence view, the automation and its run history, the interface, and the Notion hub with the roster embedded.</p>
+<p class="walkthrough"><a href="https://www.youtube.com/watch?v=ROfB53WNi4w" target="_blank" rel="noopener noreferrer">Watch the walkthrough on YouTube</a></p>
+<hr>
+<h2>Known gaps</h2>
+<ul><li><strong>Sample data only.</strong> Deliberate. Staff records in a healthcare organisation are personal data, so nothing real was ever entered.</li><li><strong>No self service form</strong>, where providers enter their own details and upload licence copies. That turned out to be the practice's top priority, and it surfaced during the demo, which is rather the point of showing something real early.</li><li><strong>Airtable cannot do custom fonts or exact brand hex codes.</strong> Flagged in writing before any commitment.</li><li><strong>Licence data is trusted, not verified.</strong> The base records what someone types. It does not check a licence against a state board, and a renewal tracker is only as good as the dates entered.</li></ul>
+  </div>
+
+  <div class="case-links"><a class="btn" href="https://app.notion.com/p/3c370072ce9281f48c81d83c202b565a" target="_blank" rel="noopener noreferrer">Read the original on Notion</a></div>
+</main>
+
+<script src="../case.js"></script>
+</body>
+</html>

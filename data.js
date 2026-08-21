@@ -144,7 +144,7 @@ window.PORTFOLIO_DATA = {
   /* Cases whose page has been generated from Notion into cases/<id>.html.
      Everything not listed here still links straight out to Notion, so the
      rollout can go one case at a time. Written by sync/build.js. */
-  casePages: ["rag"],
+  casePages: ["rag", "licensure-directory"],
 
   problems: [
     {

@@ -112,15 +112,27 @@ function table(lines) {
 }
 
 function loom(src) {
-  const m = src.match(/loom\.com\/share\/([a-z0-9]+)/i);
-  if (!m) return "";
   /* Linked, not iframed. An iframe would be a third-party request on a page
      that otherwise makes none, and it cannot be lazy without script. */
-  return (
-    '<p class="walkthrough"><a href="https://www.loom.com/share/' +
-    m[1] +
-    '" target="_blank" rel="noopener noreferrer">Watch the walkthrough on Loom</a></p>'
-  );
+  const l = src.match(/loom\.com\/share\/([a-z0-9]+)/i);
+  if (l) {
+    return (
+      '<p class="walkthrough"><a href="https://www.loom.com/share/' +
+      l[1] +
+      '" target="_blank" rel="noopener noreferrer">Watch the walkthrough on Loom</a></p>'
+    );
+  }
+  /* Walkthroughs moved to YouTube from case #14 on, because Loom's free plan
+     caps at 25 videos and will not export an MP4. Same treatment: a link. */
+  const y = src.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=)([A-Za-z0-9_-]{6,})/i);
+  if (y) {
+    return (
+      '<p class="walkthrough"><a href="https://www.youtube.com/watch?v=' +
+      y[1] +
+      '" target="_blank" rel="noopener noreferrer">Watch the walkthrough on YouTube</a></p>'
+    );
+  }
+  return "";
 }
 
 /* The caption sits either before or after its image depending on the page, so
