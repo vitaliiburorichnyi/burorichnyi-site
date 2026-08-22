@@ -234,7 +234,10 @@
 
 .case-body-text tr:last-child td { border-bottom: 0; }
 
-.case-body-text figure { margin: 0 0 26px; }
+/* Longhand on purpose. The breakout rule above sets a negative margin-left so
+   a figure is centred on the reading column; a `margin` shorthand here would
+   reset it to zero and the image would hang off the right edge instead. */
+.case-body-text figure { margin-top: 0; margin-right: 0; margin-bottom: 26px; }
 
 .case-body-text figure img {
   display: block;
@@ -292,7 +295,7 @@
 /* Click-to-load. The poster is a local frame from the video, so the page
    still makes no third-party request until the reader presses play. */
 
-.case-body-text .video-embed { margin: 0 0 26px; }
+.case-body-text .video-embed { margin-top: 0; margin-right: 0; margin-bottom: 26px; }
 
 .case-body-text .video-facade {
   display: block;
