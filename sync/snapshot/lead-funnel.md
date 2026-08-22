@@ -122,7 +122,7 @@ Enforced via: Structured Output Parser (strict JSON schema)
 
 ## 🎥 Loom Screencast
 
-<video src="https://www.loom.com/share/233819523c2e4670b2c18b61dbe12f8c"></video>
+<video src="https://youtu.be/JahyTMW6J7A"></video>
 ---
 
 ## 📸 Screenshots

@@ -272,7 +272,7 @@ Runs **every Friday at 17:00**. Combines CRM funnel metrics with dialog quality 
 
 ## 🎥 Loom Screencast
 
-<video src="https://www.loom.com/share/17fc126570b344af96e1a261446f1b01"></video>
+<video src="https://youtu.be/6PpsMNdCbCs"></video>
 ---
 
 ## 📸 Screenshots

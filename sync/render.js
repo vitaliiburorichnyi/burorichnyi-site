@@ -115,7 +115,13 @@ function table(lines) {
    the facade costs no third-party request. Add a line when a case gains a
    video; without one the block falls back to a plain link. */
 const POSTERS = {
-  ROfB53WNi4w: "cases/assets/licensure-directory/14-poster.jpg"
+  ROfB53WNi4w: "cases/assets/licensure-directory/14-poster.jpg",
+  "sWcI-FyyL_A": "cases/assets/stale-deals/stale-deals-poster.jpg",
+  "pKr5_htGLDs": "cases/assets/ticket-router/ticket-router-poster.jpg",
+  "zXLmw3Yeddc": "cases/assets/email-support/email-support-poster.jpg",
+  "6PpsMNdCbCs": "cases/assets/voice-qualifier/voice-qualifier-poster.jpg",
+  "5ECjXMcbi84": "cases/assets/enrollment/enrollment-poster.jpg",
+  "JahyTMW6J7A": "cases/assets/lead-funnel/lead-funnel-poster.jpg"
 };
 
 function loom(src) {

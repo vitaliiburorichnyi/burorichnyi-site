@@ -360,7 +360,7 @@ First node after cron checks `$now.hour >= 9 && $now.hour < 22`. Outside working
 
 ## 🎥 Loom Screencast
 
-<video src="https://www.loom.com/share/2d4deb45550a4597a0e93debd733debd"></video>
+<video src="https://youtu.be/pKr5_htGLDs"></video>
 ---
 
 ## 📸 Screenshots

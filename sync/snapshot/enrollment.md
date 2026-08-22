@@ -211,7 +211,7 @@ What I would knowingly carry as risk in v1: reconciliation, fuzzy second-match, 
 
 ## 🎥 Walkthrough
 
-<video src="https://www.loom.com/share/47b8f82fd104491db8eaad34ca27021b"></video>
+<video src="https://youtu.be/5ECjXMcbi84"></video>
 ---
 
 ## 📸 Screenshots

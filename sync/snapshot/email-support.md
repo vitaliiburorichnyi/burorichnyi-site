@@ -306,7 +306,7 @@ Natural language chat interface. The owner asks questions in plain text — the 
 
 ## 🎥 Loom Screencast
 
-<video src="https://www.loom.com/share/33ae8ffb552b42b09008fbf57e51ca31"></video>
+<video src="https://youtu.be/zXLmw3Yeddc"></video>
 ## 📸 Screenshots
 
 WF1 — Email Support Automation canvas

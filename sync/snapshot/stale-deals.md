@@ -227,7 +227,7 @@ Beyond that: rep grouping means one message per person instead of one per deal; 
 
 ## 🎥 Walkthrough
 
-<video src="https://www.loom.com/share/6c1967ec2fab4c5285401e22f28b2a61"></video>
+<video src="https://youtu.be/sWcI-FyyL_A"></video>
 ---
 
 ## 📸 Screenshots
