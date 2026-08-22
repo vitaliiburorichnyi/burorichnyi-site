@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SmartOrder - Order Automation for HoReCa - Vitalii Burorichnyi</title>
+<meta name="description" content="Staff type orders in plain language; AI parses, matches suppliers, flags duplicates, and a manager dispatches to all four suppliers in one tap.">
+<link rel="icon" href="../avatar.png">
+<link rel="apple-touch-icon" href="../avatar.png">
+
+<!-- Same pre-paint theme script as the map, so moving between them never flashes. -->
+<script>
+  (function () {
+    var stored = null;
+    try { stored = localStorage.getItem("theme"); } catch (e) { /* blocked */ }
+    var theme = (stored === "light" || stored === "dark") ? stored
+      : (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>
+
+<link rel="stylesheet" href="../styles.css?v=6ruha1">
+<link rel="stylesheet" href="../case.css?v=btmvpw">
+</head>
+<body class="case-body">
+
+<header class="case-header">
+  <a class="case-back" href="../#smartorder">
+    <img src="../avatar.png" alt="" width="36" height="36">
+    <span>Back to the map</span>
+  </a>
+  <button id="theme-toggle" class="icon-btn" type="button" aria-label="Switch to light theme">
+    <svg class="icon icon--sun" viewBox="0 0 24 24" width="18" height="18" fill="none"
+         stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.2 5.2l1.5 1.5M17.3 17.3l1.5 1.5M18.8 5.2l-1.5 1.5M6.7 17.3l-1.5 1.5"/>
+    </svg>
+    <svg class="icon icon--moon" viewBox="0 0 24 24" width="18" height="18" fill="none"
+         stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M20.1 14.3A8.2 8.2 0 0 1 9.7 3.9a8.6 8.6 0 1 0 10.4 10.4Z"/>
+    </svg>
+  </button>
+</header>
+
+<main class="case">
+  <p class="eyebrow">Case study</p>
+  <h1>SmartOrder - Order Automation for HoReCa</h1>
+  <p class="subtitle">AI Supplier Order Management:</p>
+
+  <div class="case-meta">
+    <span>team of 3</span>
+    <span>n8n</span><span>Claude Haiku</span><span>Supabase</span><span>Telegram Bot API</span><span>Vercel</span>
+  </div>
+
+  <div class="case-body-text">
+<p>Automated Order Collection, Parsing &amp; Dispatch for a Restaurant &amp; Bar</p>
+<hr>
+<h2>Context</h2>
+<p><strong>Company:</strong> Kitchen &amp; Bar - full-service restaurant and bar venue</p>
+<p><strong>Industry:</strong> HoReCa (Restaurants, Bars, Cafes)</p>
+<p><strong>Target clients:</strong> Venue staff (bar, kitchen) + operations manager</p>
+<p><strong>Order volume:</strong> Daily supplier orders across 2 departments, 4 suppliers</p>
+<p><strong>Team:</strong> Bar staff + kitchen staff + 1 manager</p>
+<p><strong>Core problem:</strong> Orders collected via WhatsApp and paper notes - no consolidation, no control, no audit trail</p>
+<hr>
+<h2>Problem</h2>
+<div class="table-wrap"><table><tr><th scope="col">Metric</th><th scope="col">Value</th><th scope="col">Issue</th></tr><tr><td>Order collection</td><td>100% manual</td><td>WhatsApp messages, paper notes, verbal requests</td></tr><tr><td>Duplicate detection</td><td>None</td><td>Same item ordered twice from different departments</td></tr><tr><td>Supplier consolidation</td><td>Manual</td><td>Manager merged orders by hand before sending</td></tr><tr><td>Order confirmation</td><td>None</td><td>No visibility into what was sent and when</td></tr><tr><td>Audit trail</td><td>None</td><td>No log of what was ordered, by whom, for which supplier</td></tr></table></div>
+<p>The manager received orders from bar and kitchen staff through different channels with no structure. Consolidating orders per supplier before sending was done manually, took time, and regularly caused duplicates or missed items.</p>
+<hr>
+<h2>Solution</h2>
+<p>Built a <strong>2-workflow AI order automation system</strong> that collects, parses, consolidates, and dispatches:</p>
+<pre><code>[bar.html / restaurant.html]
+        │
+        │  POST { venue: &quot;bar&quot;|&quot;restaurant&quot;, items: &quot;raw text&quot; }
+        ▼
+[WF-A: Parse &amp; Store]  ←── Webhook: /webhook/smartorder-demo
+        │
+        ├─ Read Products Master (Supabase)
+        ├─ AI Parse (Claude Haiku) — item matching + typo handling
+        ├─ Map to Rows (Code node)
+        └─ Insert → orders_parsed (status: pending)
+                        │
+[WF-B: Manager Bot]  ←── Telegram Trigger (manager messages bot)
+        │
+        ├─ /digest or text  →  digest by supplier + inline buttons
+        ├─ view_*           →  supplier detail view
+        ├─ send_*           →  send to supplier → status: sent
+        ├─ send_all         →  dispatch to all suppliers at once
+        └─ keep_open        →  stay pending, allow more additions</code></pre>
+<h3>WF-A - Order Intake: Parse &amp; Store</h3>
+<p>Triggered by staff submitting free-text orders via web terminal (bar.html or restaurant.html). Claude Haiku reads the raw input, matches each item to the products master table in Supabase, identifies the correct supplier, and saves each line item as a separate row with <code>status: pending</code>. Typos and informal naming (e.g. “hendrix” → Hendricks Gin) handled automatically.</p>
+<h3>WF-B - Manager Bot: Review &amp; Dispatch</h3>
+<p>Telegram bot interface for the manager. On any message or <code>/digest</code>, returns a consolidated view of all pending items grouped by supplier - Bar and Restaurant orders automatically merged. If both departments ordered the same item, it is flagged with 🔀. Manager taps a supplier to see the full item list, then approves and dispatches with one button.</p>
+<hr>
+<h2>Process</h2>
+<h3>1. AI Parsing Logic</h3>
+<ul><li>Staff enter orders in plain Ukrainian or Russian - no formatting required</li><li>Claude Haiku matches each item to the Supabase products master (name, unit, supplier)</li><li>Typo handling and informal product names resolved at parse time</li><li>Duplicate detection: if item already exists in active order, staff sees a warning with two options - cancel or add quantity</li></ul>
+<h3>2. Order Consolidation</h3>
+<div class="table-wrap"><table><tr><th scope="col">Source</th><th scope="col">Behaviour</th></tr><tr><td>Same item, same department</td><td>Flagged as duplicate at intake</td></tr><tr><td>Same item, different departments</td><td>Merged in digest, flagged with 🔀</td></tr><tr><td>Different items, same supplier</td><td>Consolidated under one supplier in digest</td></tr><tr><td>All suppliers</td><td>“Send to ALL” button dispatches in one action</td></tr></table></div>
+<h3>3. n8n Workflow Architecture</h3>
+<div class="table-wrap"><table><tr><th scope="col">Workflow</th><th scope="col">Trigger</th><th scope="col">Function</th></tr><tr><td>WF-A - Parse &amp; Store</td><td>Webhook (POST from web terminal)</td><td>AI parse → supplier match → insert to Supabase</td></tr><tr><td>WF-B - Manager Bot</td><td>Telegram message</td><td>Digest → supplier view → dispatch → status update</td></tr></table></div>
+<h3>4. Dispatch Flow</h3>
+<div class="table-wrap"><table><tr><th scope="col">Action</th><th scope="col">Trigger</th><th scope="col">Result</th></tr><tr><td>Send to supplier</td><td>Manager taps 📤</td><td>Message sent to supplier Telegram, status → sent</td></tr><tr><td>Keep open</td><td>Manager taps 🔓</td><td>Items stay pending, staff can add more</td></tr><tr><td>Send to ALL</td><td>Manager taps 📤 Send to ALL</td><td>All 4 suppliers receive orders simultaneously</td></tr></table></div>
+<p><strong>4 Suppliers:</strong> Alkotreid · Solodka Vodychka LLC · Svizhy Smak · Prom Tov</p>
+<hr>
+<h2>Results</h2>
+<div class="table-wrap"><table><tr><th scope="col">Metric</th><th scope="col">Before</th><th scope="col">After</th><th scope="col">Change</th></tr><tr><td>Order collection</td><td>Manual, multi-channel</td><td>Unified web terminal</td><td><strong>↑ Structured</strong></td></tr><tr><td>Duplicate detection</td><td>None</td><td>Automatic at intake</td><td><strong>New</strong></td></tr><tr><td>Consolidation time</td><td>10-20 min/day manual</td><td>Instant, automated</td><td><strong>↓ 100%</strong></td></tr><tr><td>Supplier dispatch</td><td>Manual copy-paste</td><td>One tap per supplier</td><td><strong>New</strong></td></tr><tr><td>Audit trail</td><td>None</td><td>Full log in Supabase</td><td><strong>New</strong></td></tr><tr><td>Multi-supplier dispatch</td><td>Sequential manual</td><td>One-click send to all</td><td><strong>New</strong></td></tr></table></div>
+<hr>
+<h2>Tech Stack</h2>
+<ul><li><strong>n8n</strong> (cloud) - workflow automation engine</li><li><strong>Anthropic Claude Haiku</strong> (via n8n LangChain nodes) - order parsing and item matching</li><li><strong>Supabase (PostgreSQL)</strong> - products master table and orders database</li><li><strong>Telegram Bot API</strong> - manager approval and dispatch interface</li><li><strong>Vanilla HTML/CSS/JS</strong> - staff order terminals (bar + restaurant)</li><li><strong>Vercel</strong> - frontend hosting</li></ul>
+<hr>
+<h2>What Works</h2>
+<ul><li>Full end-to-end automation: staff submits text → AI parses → manager reviews → dispatch in one tap</li><li>Free-text input - staff don’t need to follow any format or structure</li><li>Duplicate detection at intake - prevents double orders within a department</li><li>Cross-department consolidation - bar and restaurant orders merged automatically per supplier</li><li>One-click send to all suppliers simultaneously</li><li>Full order log in Supabase - every item, status, and timestamp recorded</li><li>Demo-ready: live bot <a href="https://t.me/orderchef_kb_bot" target="_blank" rel="noopener noreferrer">@orderchef_kb_bot</a>, public order channel <a href="https://t.me/smartorderstest22" target="_blank" rel="noopener noreferrer">@smartorderstest22</a></li></ul>
+<hr>
+<h2>What Can Be Improved</h2>
+<ul><li><strong>Staff authentication</strong> - terminals are currently open; adding venue PIN would prevent unauthorized access</li><li><strong>Order history view</strong> - manager can see current pending orders but no historical log in the bot</li><li><strong>Supplier contacts</strong> - currently hardcoded; a Supabase supplier table would make it dynamic</li><li><strong>Delivery confirmation</strong> - no feedback loop when supplier confirms receipt</li><li><strong>Analytics</strong> - no reporting on order frequency, top items, or supplier reliability</li></ul>
+<hr>
+<h2>Development Plan</h2>
+<ol><li>Add supplier table to Supabase → dynamic supplier contacts, no hardcoding</li><li>Build order history view in Telegram bot → manager can review sent orders by date</li><li>Add staff PIN authentication to web terminals</li><li>Integrate supplier confirmation webhook → close the loop after dispatch</li><li>Build weekly analytics report → top items, order volume by department, sent to manager via Telegram</li></ol>
+<hr>
+<h2>GitHub Repository</h2>
+<p>🔗 <a href="https://github.com/vitaliiburorichnyi/smart-order-management" target="_blank" rel="noopener noreferrer">https://github.com/vitaliiburorichnyi/smart-order-management</a></p>
+<p><strong>Live demo:</strong> <a href="https://smartorder-demo-kohl.vercel.app/" target="_blank" rel="noopener noreferrer">smartorder-demo-kohl.vercel.app</a></p>
+<p><strong>Telegram bot:</strong> <a href="https://t.me/orderchef_kb_bot" target="_blank" rel="noopener noreferrer">@orderchef_kb_bot</a></p>
+  </div>
+
+  <div class="case-links"><a class="btn" href="https://app.notion.com/p/38170072ce928027b363c5c97de6659b" target="_blank" rel="noopener noreferrer">Read the original on Notion</a><a class="btn" href="https://github.com/vitaliiburorichnyi/smart-order-management" target="_blank" rel="noopener noreferrer">Code on GitHub</a></div>
+</main>
+
+<script src="../case.js?v=imn4j0"></script>
+</body>
+</html>

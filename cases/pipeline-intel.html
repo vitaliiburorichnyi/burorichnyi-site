@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sales Pipeline Intelligence System - Vitalii Burorichnyi</title>
+<meta name="description" content="Scores deal health weekly, flags at-risk pipeline automatically, and delivers a Friday forecast with no spreadsheet work.">
+<link rel="icon" href="../avatar.png">
+<link rel="apple-touch-icon" href="../avatar.png">
+
+<!-- Same pre-paint theme script as the map, so moving between them never flashes. -->
+<script>
+  (function () {
+    var stored = null;
+    try { stored = localStorage.getItem("theme"); } catch (e) { /* blocked */ }
+    var theme = (stored === "light" || stored === "dark") ? stored
+      : (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>
+
+<link rel="stylesheet" href="../styles.css?v=6ruha1">
+<link rel="stylesheet" href="../case.css?v=btmvpw">
+</head>
+<body class="case-body">
+
+<header class="case-header">
+  <a class="case-back" href="../#pipeline-intel">
+    <img src="../avatar.png" alt="" width="36" height="36">
+    <span>Back to the map</span>
+  </a>
+  <button id="theme-toggle" class="icon-btn" type="button" aria-label="Switch to light theme">
+    <svg class="icon icon--sun" viewBox="0 0 24 24" width="18" height="18" fill="none"
+         stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.2 5.2l1.5 1.5M17.3 17.3l1.5 1.5M18.8 5.2l-1.5 1.5M6.7 17.3l-1.5 1.5"/>
+    </svg>
+    <svg class="icon icon--moon" viewBox="0 0 24 24" width="18" height="18" fill="none"
+         stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M20.1 14.3A8.2 8.2 0 0 1 9.7 3.9a8.6 8.6 0 1 0 10.4 10.4Z"/>
+    </svg>
+  </button>
+</header>
+
+<main class="case">
+  <p class="eyebrow">Case study</p>
+  <h1>Sales Pipeline Intelligence System</h1>
+  
+
+  <div class="case-meta">
+    <span>Solo build</span>
+    <span>n8n</span><span>HubSpot</span><span>GPT-5 mini</span><span>Google Sheets</span><span>Telegram</span>
+  </div>
+
+  <div class="case-body-text">
+<p>A 3-workflow AI automation system that analyzes a B2B sales pipeline daily, scores each deal’s health weekly, and delivers a strategic CEO forecast - all automatically via Telegram.</p>
+<hr>
+<h2>Context</h2>
+<p>An AI automation agency runs an active sales pipeline with 10-15 deals at any given time. Sales managers track deals manually, and leadership has no real-time visibility into risks, stalled deals, or weekly revenue forecasts. Every insight requires manual CRM digging.</p>
+<h2>Project Summary</h2>
+<div class="table-wrap"><table><tr><th scope="col"><strong>Type</strong></th><th scope="col">AI Sales Intelligence System</th></tr><tr><td><strong>Stack</strong></td><td>n8n · HubSpot CRM · GPT-5 mini · Google Sheets · Telegram</td></tr><tr><td><strong>Workflows</strong></td><td>3 (Daily Report · Deal Health Alerts · CEO Forecast)</td></tr><tr><td><strong>Status</strong></td><td>✅ Built and tested</td></tr><tr><td><strong>GitHub</strong></td><td><a href="https://github.com/vitaliiburorichnyi/sales-intelligence-system" target="_blank" rel="noopener noreferrer">Sales-Intelligence-System</a></td></tr></table></div>
+<hr>
+<h2>Problem</h2>
+<ul><li>Managers spend 30-60 min/day manually checking deal status</li><li>Leadership has no automated risk alerts for stalled or overdue deals</li><li>No weekly strategic forecast exists - decisions made on gut feeling</li><li>Critical deals slip through the cracks without timely follow-up</li></ul>
+<hr>
+<h2>Solution</h2>
+<p>Three interconnected n8n workflows that run automatically:</p>
+<ol><li><strong>Daily Sales Report</strong> - AI agent analyzes the pipeline and sends a prioritized Telegram report every morning</li><li><strong>Deal Health Alerts</strong> - Every deal is scored 1-10 weekly, stored in Google Sheets, and critical/medium alerts fire instantly to Telegram</li><li><strong>CEO Forecast</strong> - Friday evening strategic briefing with revenue projections, top risks, and weekly recommendations</li></ol>
+<hr>
+<h2>Process</h2>
+<h3>Part 1 - Daily Sales Report</h3>
+<ul><li>Schedule Trigger fires at 9:10 AM daily</li><li>HubSpot API pulls all active deals with key properties</li><li>Code Node aggregates data: stage counts, amounts, identifies stuck deals</li><li>AI Agent (GPT-5 mini) receives summary, calls Get Deal tool for each at-risk deal individually</li><li>Structured Output Parser returns clean JSON with priorities and recommendations</li><li>Code Node splits message to respect Telegram’s 4096 character limit</li><li>Telegram delivers formatted HTML report</li></ul>
+<h3>Part 2 - Deal Health Alerts</h3>
+<ul><li>Schedule Trigger fires Monday 10:00 AM</li><li>Loop Over Items processes each deal individually</li><li>If Node filters only stuck stages: Presentation Scheduled, Decision Maker Bought-In, Contract Sent</li><li>Sub-workflow fetches all engagements (notes, calls, tasks) via HubSpot Engagements API</li><li>AI Agent scores each deal 1-10 with full JSON analysis</li><li>Google Sheets stores results with Append or Update (no duplicates by Deal ID)</li><li>Switch routes Critical (≤4) and Medium (≤7) deals to Telegram alerts</li><li>Normal deals return to loop silently</li></ul>
+<h3>Part 3 - CEO Forecast</h3>
+<ul><li>Schedule Trigger fires Friday 19:00</li><li>Google Sheets pulls all accumulated Deal Health data</li><li>Aggregate node collects all rows into single array</li><li>AI Agent produces executive briefing: pipeline health, revenue at risk, top 3 risks, weekly recommendations</li><li>Telegram delivers formatted CEO report</li></ul>
+<hr>
+<h2>Results</h2>
+<ul><li>100% automated pipeline visibility - zero manual CRM checking</li><li>Critical deals flagged within minutes of weekly analysis</li><li>9 deals analyzed, scored, and stored in single workflow run</li><li>Two-tier reporting: operational alerts for managers + strategic forecast for CEO</li><li>Full audit trail in Google Sheets with historical scoring trends</li></ul>
+<hr>
+<h2>Tech Stack</h2>
+<div class="table-wrap"><table><tr><th scope="col">Tool</th><th scope="col">Role</th></tr><tr><td>n8n</td><td>Workflow automation engine</td></tr><tr><td>HubSpot CRM</td><td>Deal data source + engagements</td></tr><tr><td>GPT-5 mini</td><td>AI analysis and scoring</td></tr><tr><td>Google Sheets</td><td>Analytics storage</td></tr><tr><td>Telegram Bot</td><td>Delivery channel</td></tr></table></div>
+<hr>
+<h2>Key Logic</h2>
+<p><strong>AI Agent as investigator</strong></p>
+<p>In Part 1 the agent receives only deal IDs and calls the Get Deal tool itself for each problematic deal. It decides what to investigate - not the workflow.</p>
+<p><strong>Sub-workflow isolation</strong></p>
+<p>Engagement fetching is a separate workflow for clean debugging and reusability. If it breaks, it doesn’t take down the main workflow.</p>
+<p><strong>Switch node order</strong></p>
+<p>Critical → Medium → Normal. Order is critical: first match wins. Reversed order would route all deals to Normal regardless of score.</p>
+<p><strong>Append or Update</strong></p>
+<p>Google Sheets updates existing rows by Deal ID, never duplicates. Essential for accurate historical tracking across weekly runs.</p>
+<p><strong>JSON.stringify for AI input</strong></p>
+<p>All deal and engagement data passed to AI agents as stringified JSON, not raw objects. Prevents serialization issues and keeps token usage predictable.</p>
+<hr>
+<hr>
+<h2>Screenshots</h2>
+<p>Part 1 workflow canvas</p>
+<figure><img src="../cases/assets/pipeline-intel/Part_1_workflow_canvas.png" alt="" loading="lazy"></figure>
+<p>Part 2 main workflow canvas</p>
+<figure><img src="../cases/assets/pipeline-intel/Part_2_main_workflow_canvas.png" alt="" loading="lazy"></figure>
+<p>Part 2 sub-workflow canvas</p>
+<figure><img src="../cases/assets/pipeline-intel/Part_2_sub-workflow_canvas.png" alt="" loading="lazy"></figure>
+<p>Google Sheets with deal health data</p>
+<figure><img src="../cases/assets/pipeline-intel/Google_Sheets_with_deal_health_data.png" alt="" loading="lazy"></figure>
+<p>Telegram - daily report</p>
+<figure><img src="../cases/assets/pipeline-intel/Telegram__CEO_forecast.png" alt="" loading="lazy"></figure>
+<p>Telegram - Critical alert</p>
+<figure><img src="../cases/assets/pipeline-intel/Telegram__Critical_alert.png" alt="" loading="lazy"></figure>
+<p>Telegram - Medium alert</p>
+<figure><img src="../cases/assets/pipeline-intel/Telegram__Medium_alert.png" alt="" loading="lazy"></figure>
+<p>Telegram - CEO forecast</p>
+<figure><img src="../cases/assets/pipeline-intel/Screenshot_2026-05-22_at_16.01.40.png" alt="" loading="lazy"></figure>
+  </div>
+
+  <div class="case-links"><a class="btn" href="https://app.notion.com/p/36870072ce928022b845c7f4b5e97afe" target="_blank" rel="noopener noreferrer">Read the original on Notion</a></div>
+</main>
+
+<script src="../case.js?v=imn4j0"></script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Voice Sales Qualifier - Vitalii Burorichnyi</title>
+<meta name="description" content="An outbound voice agent that calls every new lead within 2 minutes, runs BANT qualification, and scores them 0-100 into the CRM.">
+<link rel="icon" href="../avatar.png">
+<link rel="apple-touch-icon" href="../avatar.png">
+
+<!-- Same pre-paint theme script as the map, so moving between them never flashes. -->
+<script>
+  (function () {
+    var stored = null;
+    try { stored = localStorage.getItem("theme"); } catch (e) { /* blocked */ }
+    var theme = (stored === "light" || stored === "dark") ? stored
+      : (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>
+
+<link rel="stylesheet" href="../styles.css?v=6ruha1">
+<link rel="stylesheet" href="../case.css?v=btmvpw">
+</head>
+<body class="case-body">
+
+<header class="case-header">
+  <a class="case-back" href="../#voice-qualifier">
+    <img src="../avatar.png" alt="" width="36" height="36">
+    <span>Back to the map</span>
+  </a>
+  <button id="theme-toggle" class="icon-btn" type="button" aria-label="Switch to light theme">
+    <svg class="icon icon--sun" viewBox="0 0 24 24" width="18" height="18" fill="none"
+         stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.2 5.2l1.5 1.5M17.3 17.3l1.5 1.5M18.8 5.2l-1.5 1.5M6.7 17.3l-1.5 1.5"/>
+    </svg>
+    <svg class="icon icon--moon" viewBox="0 0 24 24" width="18" height="18" fill="none"
+         stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M20.1 14.3A8.2 8.2 0 0 1 9.7 3.9a8.6 8.6 0 1 0 10.4 10.4Z"/>
+    </svg>
+  </button>
+</header>
+
+<main class="case">
+  <p class="eyebrow">Case study</p>
+  <h1>AI Voice Sales Qualifier</h1>
+  <p class="subtitle">AI Voice Sales Ecosystem:</p>
+
+  <div class="case-meta">
+    <span>Solo build</span>
+    <span>Happ.tools</span><span>SIP</span><span>n8n</span><span>Claude</span><span>Zoho CRM</span><span>Telegram</span>
+  </div>
+
+  <div class="case-body-text">
+<p>Automated Lead Qualification to CEO Report</p>
+<hr>
+<h2>Context</h2>
+<p><strong>Company:</strong> GrowthLab - performance marketing agency</p>
+<p><strong>Industry:</strong> B2B Marketing Services</p>
+<p><strong>Target clients:</strong> E-commerce businesses with monthly revenue $50K-$500K</p>
+<p><strong>Average contract:</strong> $2,500/month for 6+ months</p>
+<p><strong>Team:</strong> 4 sales managers</p>
+<p><strong>Website traffic:</strong> 3,000 visitors/month → 100 leads/month</p>
+<hr>
+<h2>Problem</h2>
+<div class="table-wrap"><table><tr><th scope="col">Metric</th><th scope="col">Value</th><th scope="col">Issue</th></tr><tr><td>Qualification time</td><td>20 min/lead</td><td>75% were non-target clients</td></tr><tr><td>Lead response time</td><td>Hours/days</td><td>Leads go cold waiting for callback</td></tr><tr><td>Lead → Deal conversion</td><td>5%</td><td>Too many unqualified leads in pipeline</td></tr><tr><td>Dialog analysis</td><td>None</td><td>No data on what works or fails</td></tr><tr><td>CEO reporting</td><td>Manual, monthly</td><td>Inaccurate and always delayed</td></tr></table></div>
+<p>Sales managers were spending most of their time on leads that were never going to convert. No system existed to filter, score, or learn from conversations.</p>
+<hr>
+<h2>Solution</h2>
+<p>Built a <strong>3-part AI voice sales ecosystem</strong> that works as a closed loop:</p>
+<pre><code>New Lead → Voice Agent Call → BANT Score → CRM
+                                    ↓
+                            Daily Dialog Analysis → Google Sheets
+                                    ↓
+                            Weekly CEO Report → Telegram</code></pre>
+<h3>WF1 - Voice Agent System (3 sub-workflows)</h3>
+<p>Automatically calls new leads within <strong>2 minutes</strong> of form submission. AI agent Arabella qualifies leads using BANT framework, calculates score 0-100, and updates Zoho CRM with <code>AI_Context</code> + <code>AI_Score</code> + <code>Session_ID</code>.</p>
+<h3>WF2 - Dialog Analysis</h3>
+<p>Runs <strong>daily at 9:00</strong>. Analyzes every qualified call - identifies agent errors, client pain points, and successful patterns. Writes structured analysis to Google Sheets.</p>
+<h3>WF3 - CEO Report</h3>
+<p>Runs <strong>every Friday at 17:00</strong>. Combines CRM funnel metrics with dialog quality data. AI generates actionable weekly report sent directly to CEO via Telegram.</p>
+<hr>
+<h2>Process</h2>
+<h3>1. Prompt Design</h3>
+<ul><li>BANT qualification prompt for voice format</li><li>Scoring rules: Budget / Authority / Need / Timeline (0-25 each = 100 max)</li><li>Dialog analysis prompt for quality review (English)</li><li>CEO report prompt with Structured Output Parser</li></ul>
+<h3>2. API Integration</h3>
+<ul><li><strong>Happ.tools</strong> - Voice assistant + INIT + postcall webhooks</li><li><strong>Zoho CRM</strong> - Custom fields: <code>AI_Score</code>, <code>AI_Context</code>, <code>Session_ID</code></li><li><strong>Anthropic Claude Sonnet</strong> - AI scoring and analysis</li><li><strong>Google Sheets</strong> - Dialog analysis database</li><li><strong>Telegram Bot</strong> - CEO notification channel</li></ul>
+<h3>3. n8n Workflow Architecture</h3>
+<div class="table-wrap"><table><tr><th scope="col">Workflow</th><th scope="col">Trigger</th><th scope="col">Function</th></tr><tr><td>WF1a - Call Trigger</td><td>Zoho CRM Webhook</td><td>Cleans phone → triggers Happ.tools call</td></tr><tr><td>WF1b - Postcall Handler</td><td>Happ.tools Webhook</td><td>Scores call → updates CRM lead</td></tr><tr><td>WF1c - Lead Lookup</td><td>Happ.tools INIT</td><td>Returns lead name to voice agent</td></tr><tr><td>WF2 - Dialog Analysis</td><td>Schedule (daily 9:00)</td><td>Analyzes calls → writes to Google Sheets</td></tr><tr><td>WF3 - CEO Report</td><td>Schedule (Friday 17:00)</td><td>CRM + Sheets → AI report → Telegram</td></tr></table></div>
+<h3>4. BANT Scoring Rules</h3>
+<div class="table-wrap"><table><tr><th scope="col">Category</th><th scope="col">25 pts</th><th scope="col">20 pts</th><th scope="col">15 pts</th><th scope="col">10 pts</th><th scope="col">0 pts</th></tr><tr><td>Budget</td><td>$3K+/mo</td><td>$2.5K</td><td>$1.5-2.5K</td><td>Below $1.5K</td><td>Not stated</td></tr><tr><td>Authority</td><td>Owner/CEO</td><td>CMO/Head</td><td>Influences</td><td>Gathers info</td><td>Unknown</td></tr><tr><td>Need</td><td>Urgent problem</td><td>Clear problem</td><td>Mild need</td><td>Vague desire</td><td>Not stated</td></tr><tr><td>Timeline</td><td>This week</td><td>This month</td><td>Next month</td><td>2-3 months</td><td>Just looking</td></tr></table></div>
+<hr>
+<h2>Results</h2>
+<div class="table-wrap"><table><tr><th scope="col">Metric</th><th scope="col">Before</th><th scope="col">After</th><th scope="col">Change</th></tr><tr><td>Qualification time</td><td>20 min/lead</td><td>2 min/lead</td><td><strong>↓ 90%</strong></td></tr><tr><td>Lead response time</td><td>Hours</td><td>2 minutes</td><td><strong>↓ 98%</strong></td></tr><tr><td>AI Score per lead</td><td>None</td><td>0-100 automatic</td><td><strong>New</strong></td></tr><tr><td>CEO report frequency</td><td>Monthly manual</td><td>Weekly automated</td><td><strong>4x faster</strong></td></tr><tr><td>Dialog analysis</td><td>None</td><td>Daily automatic</td><td><strong>New</strong></td></tr><tr><td>Scalability</td><td>100 leads/4 managers</td><td>1,000+ leads/same team</td><td><strong>10x</strong></td></tr></table></div>
+<hr>
+<h2>Tech Stack</h2>
+<ul><li><strong>n8n</strong> (self-hosted) - workflow automation engine</li><li><strong>Happ.tools</strong> - AI voice agent (GPT-4o, English voice Arabella)</li><li><strong>Anthropic Claude Sonnet</strong> - AI analysis, scoring, report generation</li><li><strong>Zoho CRM</strong> - lead management and custom fields</li><li><strong>Google Sheets</strong> - dialog analysis database</li><li><strong>Telegram Bot API</strong> - CEO weekly reporting</li><li><strong>ngrok</strong> - webhook tunneling</li></ul>
+<hr>
+<h2>What Works</h2>
+<ul><li>Full end-to-end automation: lead form → voice call → CRM → analysis → CEO report</li><li>Real BANT scoring based on actual conversation content</li><li>Instant lead update after every call (AI_Score + AI_Context + Session_ID)</li><li>Weekly CEO report with specific bottleneck identification and recommendations</li><li>Loop-based dialog analysis processes all leads automatically</li></ul>
+<hr>
+<h2>What Can Be Improved</h2>
+<ul><li><strong>INIT personalization</strong> - lead name lookup before call (partially built, needs fix)</li><li><strong>WhatsApp integration</strong> - alternative notification channel for CEO</li><li><strong>Multi-language support</strong> - for non-English speaking leads</li><li><strong>A/B script testing</strong> - compare different qualification approaches</li><li><strong>Deduplication</strong> - handle Happ.tools double postcall webhook</li></ul>
+<hr>
+<h2>Development Plan</h2>
+<ol><li>Fix WF1c INIT lead lookup → personalized greeting by name</li><li>Add scoring threshold → auto-assign hot leads (score &gt; 70) to senior managers</li><li>Build re-qualification flow for cold leads (score &lt; 40) with different script</li><li>Integrate Google Calendar → automatic meeting booking for hot leads</li><li>Add WhatsApp Business API notification as CEO report channel</li></ol>
+<hr>
+<h2>Loom Screencast</h2>
+<p class="walkthrough"><a href="https://www.loom.com/share/17fc126570b344af96e1a261446f1b01" target="_blank" rel="noopener noreferrer">Watch the walkthrough on Loom</a></p>
+<hr>
+<h2>Screenshots</h2>
+<p>WF1a canvas</p>
+<figure><img src="../cases/assets/voice-qualifier/WF1a_canvas.png" alt="" loading="lazy"></figure>
+<p>WF1b canvas</p>
+<figure><img src="../cases/assets/voice-qualifier/WF1b_canvas.png" alt="" loading="lazy"></figure>
+<p>WF2 canvas</p>
+<figure><img src="../cases/assets/voice-qualifier/WF2_canvas.png" alt="" loading="lazy"></figure>
+<p>WF3 canvas</p>
+<figure><img src="../cases/assets/voice-qualifier/WF3_canvas.png" alt="" loading="lazy"></figure>
+<p>Zoho CRM lead with AI Score</p>
+<figure><img src="../cases/assets/voice-qualifier/Zoho_CRM_lead_with_AI_Score.png" alt="" loading="lazy"></figure>
+<p>Google Sheets analysis</p>
+<figure><img src="../cases/assets/voice-qualifier/Google_Sheets_analysis.png" alt="" loading="lazy"></figure>
+<p>Telegram CEO report</p>
+<figure><img src="../cases/assets/voice-qualifier/Telegram_CEO_report.png" alt="" loading="lazy"></figure>
+<p>Call transcript example with BANT score</p>
+<figure><img src="../cases/assets/voice-qualifier/Call_transcript_example_with_BANT_score.png" alt="" loading="lazy"></figure>
+<hr>
+<h2>GitHub Repository</h2>
+<p>🔗 <a href="https://github.com/vitaliiburorichnyi/growthlab-ai-sales-ecosystem" target="_blank" rel="noopener noreferrer">https://github.com/vitaliiburorichnyi/growthlab-ai-sales-ecosystem</a></p>
+  </div>
+
+  <div class="case-links"><a class="btn" href="https://app.notion.com/p/36b70072ce9280a28066d6d9c767d640" target="_blank" rel="noopener noreferrer">Read the original on Notion</a><a class="btn" href="https://github.com/vitaliiburorichnyi/growthlab-ai-sales-ecosystem" target="_blank" rel="noopener noreferrer">Code on GitHub</a></div>
+</main>
+
+<script src="../case.js?v=imn4j0"></script>
+</body>
+</html>

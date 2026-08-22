@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>YouTube Video Intelligence Digest - Vitalii Burorichnyi</title>
+<meta name="description" content="Watches 50+ channels, triages with a cheap model, summarises the survivors with a strong one, and delivers a daily Slack digest.">
+<link rel="icon" href="../avatar.png">
+<link rel="apple-touch-icon" href="../avatar.png">
+
+<!-- Same pre-paint theme script as the map, so moving between them never flashes. -->
+<script>
+  (function () {
+    var stored = null;
+    try { stored = localStorage.getItem("theme"); } catch (e) { /* blocked */ }
+    var theme = (stored === "light" || stored === "dark") ? stored
+      : (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>
+
+<link rel="stylesheet" href="../styles.css?v=6ruha1">
+<link rel="stylesheet" href="../case.css?v=btmvpw">
+</head>
+<body class="case-body">
+
+<header class="case-header">
+  <a class="case-back" href="../#youtube-digest">
+    <img src="../avatar.png" alt="" width="36" height="36">
+    <span>Back to the map</span>
+  </a>
+  <button id="theme-toggle" class="icon-btn" type="button" aria-label="Switch to light theme">
+    <svg class="icon icon--sun" viewBox="0 0 24 24" width="18" height="18" fill="none"
+         stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.2 5.2l1.5 1.5M17.3 17.3l1.5 1.5M18.8 5.2l-1.5 1.5M6.7 17.3l-1.5 1.5"/>
+    </svg>
+    <svg class="icon icon--moon" viewBox="0 0 24 24" width="18" height="18" fill="none"
+         stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M20.1 14.3A8.2 8.2 0 0 1 9.7 3.9a8.6 8.6 0 1 0 10.4 10.4Z"/>
+    </svg>
+  </button>
+</header>
+
+<main class="case">
+  <p class="eyebrow">Case study</p>
+  <h1>YouTube Video Intelligence Digest</h1>
+  <p class="subtitle"><strong>Personal AI Automation Project</strong></p>
+
+  <div class="case-meta">
+    <span>Solo build</span>
+    <span>Python</span><span>Claude Haiku</span><span>Claude Sonnet</span><span>YouTube Data API</span><span>Slack SDK</span><span>SQLite</span>
+  </div>
+
+  <div class="case-body-text">
+<p>Advanced variant - Video Analysis Agent (yt-dlp + ffmpeg + Claude Vision)</p>
+<blockquote></blockquote>
+<hr>
+<h2>Context</h2>
+<p><strong>Use case:</strong> Content intelligence for an entrepreneur building an AI automation business</p>
+<p><strong>Input:</strong> YouTube subscription feed (avg. 7 videos / 152 min per day)</p>
+<p><strong>Output:</strong> Daily Slack digest at 09:00 with ranked summaries + preference learning loop</p>
+<p><strong>Stack:</strong> Python · Claude API · Slack SDK · YouTube Data API v3</p>
+<hr>
+<h2>Problem</h2>
+<div class="table-wrap"><table><tr><th scope="col">Metric</th><th scope="col">Value</th><th scope="col">Issue</th></tr><tr><td>Daily video content</td><td>~152 min/day</td><td>Impossible to watch everything</td></tr><tr><td>Relevant videos</td><td>~2-3 out of 7</td><td>60%+ watched time is wasted</td></tr><tr><td>Processing method</td><td>Manual</td><td>No filtering, no prioritization</td></tr><tr><td>Trend detection</td><td>None</td><td>Insights missed or found too late</td></tr><tr><td>Preference learning</td><td>None</td><td>Same noise every day, no improvement</td></tr></table></div>
+<p>Creators and founders following 50-200+ YouTube channels have no system to extract signal from noise. Watching is the only option - until now.</p>
+<hr>
+<h2>Solution</h2>
+<p>Built a <strong>3-part AI video intelligence system</strong> that runs fully automated:</p>
+<pre><code>YouTube Subscriptions → Video Download → Frame Extraction
+                                              ↓
+                              Claude Haiku (Vision Analysis)
+                                              ↓
+                              Claude Sonnet (Summary + Scoring)
+                                              ↓
+                              Slack Digest @ 09:00 daily
+                                              ↓
+                              👍 / 👎 Reactions → Preference DB
+                                              ↓
+                              Next Summary improved by feedback</code></pre>
+<h3>Module 1 - Video Fetcher</h3>
+<p>Pulls all new videos from subscribed channels published in the last 24h via YouTube Data API. Uses upload playlists instead of search endpoint - <strong>99% more quota-efficient</strong>.</p>
+<h3>Module 2 - AI Video Analyzer</h3>
+<p>Downloads each video with yt-dlp (480p), extracts 1 frame every 30 seconds via ffmpeg, then runs a two-model pipeline: Claude Haiku analyzes frames visually (cheap), Claude Sonnet synthesizes transcript + visuals into a structured summary (quality). No human input required.</p>
+<h3>Module 3 - Slack Digest + Feedback Loop</h3>
+<p>Posts one message per video to Slack at 09:00. User reacts with 👍 or 👎. Reactions are saved to SQLite. Every subsequent summary is generated with full preference history injected - the system gets more accurate over time.</p>
+<hr>
+<h2>Process</h2>
+<h3>1. Prompt Architecture</h3>
+<ul><li>Frame analysis prompt for Claude Haiku - visual description of each frame batch</li><li>Summary prompt for Claude Sonnet - synthesizes visuals + transcript + preference context</li><li>Preference injection - liked/disliked video history + channel-level affinity scores fed into every prompt</li></ul>
+<h3>2. API Integrations</h3>
+<ul><li><strong>YouTube Data API v3</strong> - OAuth 2.0 subscription feed + upload playlists</li><li><strong>yt-dlp</strong> - video download, auto-caption extraction (SRT)</li><li><strong>ffmpeg</strong> - frame extraction at 1fps / 30s intervals, 768×432px</li><li><strong>Anthropic Claude Haiku</strong> - per-frame visual analysis (cost-optimized)</li><li><strong>Anthropic Claude Sonnet</strong> - final summary generation (quality-optimized)</li><li><strong>Slack SDK</strong> - digest delivery + emoji reaction polling</li><li><strong>SQLite</strong> - local preference and feedback storage</li></ul>
+<h3>3. System Architecture</h3>
+<div class="table-wrap"><table><tr><th scope="col">Module</th><th scope="col">Trigger</th><th scope="col">Function</th></tr><tr><td>YouTube Fetcher</td><td>Daily 09:00</td><td>OAuth auth → channel IDs → last 24h videos</td></tr><tr><td>Video Analyzer</td><td>Per video</td><td>yt-dlp download → ffmpeg frames → Haiku → Sonnet</td></tr><tr><td>Slack Poster</td><td>After analysis</td><td>One message per video with summary + link</td></tr><tr><td>Reaction Poller</td><td>4h window post-post</td><td>Polls 👍/👎 → saves to preferences.db</td></tr><tr><td>Preference Injector</td><td>Every run</td><td>Builds context string from reaction history → injected into Sonnet prompt</td></tr></table></div>
+<h3>4. Two-Model Cost Optimization</h3>
+<div class="table-wrap"><table><tr><th scope="col">Task</th><th scope="col">Model</th><th scope="col">Why</th></tr><tr><td>Frame-by-frame visual analysis</td><td>Claude Haiku</td><td>High volume, factual description - speed + cost</td></tr><tr><td>Final summary generation</td><td>Claude Sonnet</td><td>Reasoning, preference matching, tone - quality</td></tr></table></div>
+<hr>
+<h2>Results</h2>
+<div class="table-wrap"><table><tr><th scope="col">Metric</th><th scope="col">Before</th><th scope="col">After</th><th scope="col">Change</th></tr><tr><td>Time to process 7 videos</td><td>152 min</td><td>0 min (automated)</td><td><strong>↓ 100%</strong></td></tr><tr><td>Relevant content surfaced</td><td>Manually</td><td>Ranked by preference score</td><td><strong>New</strong></td></tr><tr><td>Response to new videos</td><td>Same day</td><td>09:00 daily</td><td><strong>Systematic</strong></td></tr><tr><td>Preference learning</td><td>None</td><td>Compounds daily via SQLite</td><td><strong>New</strong></td></tr><tr><td>Cost per day</td><td> - </td><td>~$0.20</td><td><strong>Predictable</strong></td></tr><tr><td>Scalability</td><td>7 videos/day cap</td><td>50+ videos/same cost</td><td><strong>7x+</strong></td></tr></table></div>
+<hr>
+<h2>Tech Stack</h2>
+<ul><li><strong>Python 3.9+</strong> - core runtime</li><li><strong>YouTube Data API v3</strong> - subscription feed, OAuth 2.0</li><li><strong>yt-dlp</strong> - video download + auto-caption extraction</li><li><strong>ffmpeg</strong> - frame extraction and resizing</li><li><strong>Anthropic Claude Haiku</strong> - visual frame analysis</li><li><strong>Anthropic Claude Sonnet</strong> - summary generation + preference reasoning</li><li><strong>Slack SDK</strong> - digest posting + reaction polling</li><li><strong>SQLite</strong> - feedback and preference memory</li><li><strong>schedule</strong> - local cron-style daily trigger</li></ul>
+<hr>
+<h2>What Works</h2>
+<ul><li>Full end-to-end automation: YouTube → download → vision analysis → Slack → feedback loop</li><li>Two-model pipeline balances cost vs quality (Haiku for volume, Sonnet for output)</li><li>Preference memory compounds - system improves every day with zero extra setup</li><li>Quota-efficient YouTube fetching (upload playlists vs search = 100x fewer API units)</li><li>Handles missing transcripts gracefully - falls back to vision-only analysis</li><li>Single command to run: <code>python3 main.py</code></li></ul>
+<hr>
+<h2>What Can Be Improved</h2>
+<ul><li><strong>Relevance scoring</strong> - add 0-100 score per video based on preference match, sort digest by score</li><li><strong>Multi-language</strong> - support non-English caption extraction</li><li><strong>Thumbnail analysis</strong> - add thumbnail as additional signal before downloading full video</li><li><strong>Topic clustering</strong> - group similar videos across channels in one digest section</li><li><strong>Email fallback</strong> - send digest via email if Slack is unavailable</li><li><strong>Cloud deployment</strong> - move from local machine to always-on server (Railway / Render)</li></ul>
+<hr>
+<h2>Development Roadmap</h2>
+<ol><li>Add per-video relevance score (0-100) → auto-sort digest by score descending</li><li>Build skip logic - if score &lt; 20 based on title + thumbnail, skip full download</li><li>Add weekly meta-summary - “Your top topics this week” sent every Monday</li><li>Deploy to cloud server → remove dependency on local machine being on at 09:00</li><li>Add multi-channel support - run separate digests for different topic feeds (e.g. AI news vs marketing)</li></ol>
+<hr>
+<h2>Cost Model</h2>
+<div class="table-wrap"><table><tr><th scope="col">Volume</th><th scope="col">Daily Cost</th><th scope="col">Monthly Cost</th></tr><tr><td>7 videos / 152 min</td><td>~$0.20</td><td>~$6</td></tr><tr><td>20 videos / 400 min</td><td>~$0.50</td><td>~$15</td></tr><tr><td>50 videos / 1,000 min</td><td>~$1.20</td><td>~$36</td></tr></table></div>
+<p><em>Haiku handles frame analysis (~80% of token spend). Sonnet handles summaries (~20%).</em></p>
+<hr>
+<ul class="todo"><li> Screenshot: Slack digest example</li><li> Screenshot: 👍/👎 reaction in Slack</li><li> Screenshot: preferences.db after 7 days</li><li> Example: Claude Sonnet summary output</li></ul>
+<hr>
+<h2>GitHub Repository</h2>
+<p>🔗 <a href="https://github.com/vitaliiburorichnyi/youtube-digest" target="_blank" rel="noopener noreferrer">https://github.com/vitaliiburorichnyi/youtube-digest</a></p>
+  </div>
+
+  <div class="case-links"><a class="btn" href="https://app.notion.com/p/36e70072ce92801ebcaec17716364b0c" target="_blank" rel="noopener noreferrer">Read the original on Notion</a></div>
+</main>
+
+<script src="../case.js?v=imn4j0"></script>
+</body>
+</html>

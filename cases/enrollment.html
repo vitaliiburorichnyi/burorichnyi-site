@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enrollment Automation with Idempotency - Vitalii Burorichnyi</title>
+<meta name="description" content="One Stripe checkout drives the contact, deal, welcome list, instructor DM and ops log in a single run, behind a dedup check that runs before any write.">
+<link rel="icon" href="../avatar.png">
+<link rel="apple-touch-icon" href="../avatar.png">
+
+<!-- Same pre-paint theme script as the map, so moving between them never flashes. -->
+<script>
+  (function () {
+    var stored = null;
+    try { stored = localStorage.getItem("theme"); } catch (e) { /* blocked */ }
+    var theme = (stored === "light" || stored === "dark") ? stored
+      : (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>
+
+<link rel="stylesheet" href="../styles.css?v=6ruha1">
+<link rel="stylesheet" href="../case.css?v=btmvpw">
+</head>
+<body class="case-body">
+
+<header class="case-header">
+  <a class="case-back" href="../#enrollment">
+    <img src="../avatar.png" alt="" width="36" height="36">
+    <span>Back to the map</span>
+  </a>
+  <button id="theme-toggle" class="icon-btn" type="button" aria-label="Switch to light theme">
+    <svg class="icon icon--sun" viewBox="0 0 24 24" width="18" height="18" fill="none"
+         stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.2 5.2l1.5 1.5M17.3 17.3l1.5 1.5M18.8 5.2l-1.5 1.5M6.7 17.3l-1.5 1.5"/>
+    </svg>
+    <svg class="icon icon--moon" viewBox="0 0 24 24" width="18" height="18" fill="none"
+         stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M20.1 14.3A8.2 8.2 0 0 1 9.7 3.9a8.6 8.6 0 1 0 10.4 10.4Z"/>
+    </svg>
+  </button>
+</header>
+
+<main class="case">
+  <p class="eyebrow">Case study</p>
+  <h1>Enrollment Automation with Idempotency</h1>
+  <p class="subtitle">Stripe Checkout to CRM, Welcome Email, Instructor and Ops Log, With Dedup and Explicit Failure Checks</p>
+
+  <div class="case-meta">
+    <span>Solo build</span>
+    <span>n8n</span><span>Stripe</span><span>HubSpot</span><span>Slack</span><span>Google Sheets</span>
+  </div>
+
+  <div class="case-body-text">
+<p>Five things happen when a student pays, and one of them fails quietly. The deal gets created, the instructor gets their Slack message, the ops sheet gets its row - everything looks done - but the welcome-list add silently failed, so the student never gets access and nobody finds out until they email support.</p>
+<p>That is not a hypothetical. During the build this exact step failed three separate times for three different real reasons, and each time the rest of the run looked healthy. The fix is not a retry: it is refusing to treat &quot;no exception was thrown&quot; as success, and reading the actual response body instead.</p>
+<p>This started as a paper design. I built it live in n8n against a real Stripe sandbox, HubSpot portal, Slack workspace and Google Sheet, and every place the real API contradicted the plan is written down below.</p>
+<hr>
+<h2>Context</h2>
+<p><strong>Company:</strong> EdTech company - online course provider<br><strong>Systems:</strong> Stripe, HubSpot, Slack, Google Sheets<br><strong>Situation:</strong> When a student buys a course through Stripe, five things have to happen: the HubSpot deal is updated, the contact is tagged with the course, the welcome email sequence is triggered, the instructor is notified in Slack, and a row is added to the ops sheet<br><strong>Process today:</strong> A team member does all five by hand<br><strong>Core problem:</strong> 10 to 15 minutes per enrollment, with 20+ enrollments on a busy day</p>
+<hr>
+<h2>Problem</h2>
+<div class="table-wrap"><table><tr><th scope="col">Issue</th><th scope="col">Detail</th></tr><tr><td>Manual handling</td><td>10-15 min per enrollment, every enrollment</td></tr><tr><td>Volume</td><td>Up to 20+ enrollments a day, so up to 3-5 hours of copying</td></tr><tr><td>Five systems</td><td>Stripe, HubSpot contact, HubSpot deal, Slack, Sheets - all updated by hand</td></tr><tr><td>Error surface</td><td>A missed step means a paying student has no course access</td></tr><tr><td>No dedup</td><td>A retried or resent payment event would be processed twice</td></tr></table></div>
+<hr>
+<h2>Solution</h2>
+<pre><code>TRIGGER   Stripe webhook: checkout.session.completed
+   |
+READ      email, name, price ID -&gt; find the course + instructor
+          via the Course Config table; amount, Stripe event ID
+   |
+CHECK     Has this Stripe event ID been processed before? (dedup)
+          -&gt; if yes, stop here, zero output
+   |
+ACTIONS (in order):
+  1. Upsert the HubSpot contact by email (create if missing, update
+     if found) - tags course + sets &quot;Enrollment date&quot;, returns isNew
+  2. If isNew: flag the contact &quot;needs review&quot; + post an ops Slack warning
+  3. Create the enrollment deal (stage: Closed Won), associated to the contact
+  4. Add the contact to the course's welcome list (this is what triggers
+     HubSpot's welcome email sequence on its side)
+  5. Slack the instructor: &quot;New enrollment: Jane Doe - Course X, $150&quot;
+  6. Append a row to the ops Google Sheet:
+     date, student, email, course, amount, Stripe ID, HubSpot ID, status
+  7. Log the Stripe event ID (dedup record for next time)</code></pre>
+<p><strong>Idempotency:</strong> the processed Stripe event ID goes into a small dedup log. If the same event arrives twice (Stripe retries, or a manual resend), the workflow stops right after the check with zero output. Proven live: resending an already-processed event produces no new contact, deal, Slack message or Sheet row.</p>
+<p>The full flow: dedup check, the <code>isNew</code> branch, and the welcome-list success/error split.</p>
+<figure><img src="../cases/assets/enrollment/01 - n8n canvas - full flow.png" alt="" loading="lazy"></figure>
+<hr>
+<h2>The step most likely to break silently</h2>
+<p><strong>Adding the contact to the welcome list.</strong> The deal gets created, the Slack message fires, the Sheet row appears - everything <em>looks</em> done - but if this one step quietly fails (a renamed list, a permissions change, a HubSpot API change), the student gets no welcome email and nobody notices until they email support asking where their course access is.</p>
+<p>This isn't theoretical - it's exactly what happened during the real build: this step failed silently-looking (a plain error object) three separate times for three different real reasons (missing write scope, wrong API version for the list type, missing read scope), and each time the rest of the workflow would have looked fine to a casual glance at Slack and the Sheet.</p>
+<p><strong>How to catch it:</strong></p>
+<ol><li><strong>Check the actual response, not just &quot;did it throw.&quot;</strong> The workflow reads the HTTP response body from the welcome-list call and checks for <code>status: &quot;error&quot;</code> explicitly, rather than trusting that no exception means success. This caught all three real failures above, each with a different error shape.</li><li><strong>Route failures to a visible channel.</strong> Any non-success response sends the email, session ID and a pointer to the exact config row to check into an ops Slack channel, not into a suppressed log.</li><li><strong>Daily reconciliation (not yet built, planned).</strong> A separate scheduled workflow comparing yesterday's Enrollment Log rows against who is actually on the welcome list, flagging mismatches. That turns a one-off failure into something that cannot go unnoticed for more than a day even if someone misses the Slack alert.</li></ol>
+<p><code>Welcome List Added?</code> gates everything downstream. A success continues to the instructor DM, the ops sheet row and the dedup record. Anything else is routed to the automation-errors channel instead of passing silently.</p>
+<figure><img src="../cases/assets/enrollment/02 - welcome list check and error split.png" alt="" loading="lazy"></figure>
+<hr>
+<h2>Edge cases - when the Stripe email does not match a HubSpot contact</h2>
+<p><strong>Rule: the student paid, so they must never be blocked. Getting them access is non-negotiable; cleaning the data is a follow-up.</strong></p>
+<ol><li><strong>Normalize the email first.</strong> Lowercase and trim before anything touches HubSpot, so a formatting difference alone never causes a false mismatch.</li><li><strong>The upsert creates the contact automatically</strong> from the Stripe data (email + name) when no match exists, and HubSpot reports this back as <code>isNew: true</code>. Only then does the workflow set a <code>source_flag</code> property (&quot;created via enrollment - needs review&quot;) and run the rest of the normal flow, so the student still gets their deal, welcome-list add and instructor notification.</li><li><strong>Flag it for a human.</strong> Post to the ops Slack channel - <em>&quot;Enrollment with no matching contact. Created a new contact for jane@x.com, please verify / merge.&quot;</em> - and mark that Google Sheet row <strong>REVIEW</strong>.</li></ol>
+<p><em>Why:</em> silently dropping or parking the payment means a paying student gets nothing, which is the worst possible outcome. Creating and flagging keeps the buyer served now and lets ops reconcile duplicates later.</p>
+<hr>
+<h2>Build notes - what changed once the real APIs hit</h2>
+<p><strong>The upsert's <code>isNew</code> flag replaced a whole branch.</strong> The plan called for: search HubSpot by email, then branch into two full sets of actions, one for &quot;found&quot; and one for &quot;not found, create and flag&quot;. In the real build, HubSpot's contact upsert already does create-if-missing / update-if-found in one call, and its response includes an <code>isNew</code> boolean. So the workflow calls upsert once and branches only on <code>isNew</code>. Same outcome, half the nodes, no race between a search and a create.</p>
+<p><strong>HubSpot's newer &quot;Segments&quot; lists need a different API.</strong> The welcome list is one of HubSpot's newer Segments (their rebrand of Lists), not a classic static list. The dedicated &quot;add to list&quot; node in n8n calls HubSpot's old v1 list API, which rejected these list IDs outright (&quot;resource not found&quot;). Fixed by calling the current v3 endpoint (<code>PUT /crm/v3/lists/{id}/memberships/add</code>) directly, which needs <code>crm.lists.read</code> <strong>and</strong> <code>crm.lists.write</code> scopes.</p>
+<p><strong>HubSpot date properties want a timestamp, not an ISO string.</strong> <code>enrollment_date</code> is a date/time property. The first live attempt sent an ISO 8601 string with a timezone offset and HubSpot rejected it (&quot;not a valid long&quot;). HubSpot date/time properties expect Unix milliseconds. Fixed and confirmed live.</p>
+<p><strong>A blank header row corrupts the Sheets append.</strong> If the sheet's header row is completely empty, the append node can fall back to writing raw upstream JSON instead of the mapped columns. Typing the exact eight header names into row 1 before the first real run fixes it.</p>
+<hr>
+<h2>Test results (live)</h2>
+<p>Three real Stripe sandbox checkouts, run against the live workflow:</p>
+<div class="table-wrap"><table><tr><th scope="col">Case</th><th scope="col">Trigger</th><th scope="col">Expected result</th><th scope="col">Actual result</th></tr><tr><td>Matched contact</td><td>Checkout with an existing HubSpot contact's email</td><td>Contact tagged, deal created, welcome list added, instructor Slack DM, Sheet row status OK</td><td>✅ Confirmed</td></tr><tr><td>Mismatch</td><td>Checkout with a brand-new email</td><td>New contact auto-created and flagged, ops Slack warning, Sheet row status REVIEW, student still gets deal / list / instructor notification</td><td>✅ Confirmed</td></tr><tr><td>Duplicate event</td><td>Same event ID resent</td><td>Workflow stops at the dedup check with zero output - no new contact, deal, Slack message or Sheet row</td><td>✅ Confirmed</td></tr></table></div>
+<p>The ops log, with both <code>OK</code> and <code>REVIEW</code> rows. The <code>cs_test_</code> session IDs show these are Stripe test-mode checkouts.</p>
+<figure><img src="../cases/assets/enrollment/03 - ops sheet OK and REVIEW.png" alt="" loading="lazy"></figure>
+<p>Replaying an already-processed Stripe event through the live workflow. One item flows as far as <code>Check Not Already Processed</code>, which emits nothing. Every node after it stays grey: no contact, no deal, no Slack message, no sheet row, no duplicate log entry.</p>
+<figure><img src="../cases/assets/enrollment/04 - dedup stop - zero items out.png" alt="" loading="lazy"></figure>
+<hr>
+<h2>Impact</h2>
+<ul><li><strong>10 to 15 minutes of manual work removed per enrollment.</strong> On a 20-enrollment day that is 3 to 5 hours of copying between five systems, gone.</li><li><strong>Latency drops from &quot;whenever someone gets to it&quot; to seconds</strong>, so the welcome email lands while the purchase is still fresh.</li><li><strong>Duplicate payments events cannot double-charge the process.</strong> Dedup is built and proven, not planned.</li><li><strong>Recommendation:</strong> the reclaimed time goes to the REVIEW rows. The automation is deliberately built to hand humans a short, specific list (unmatched payers, failed list adds) instead of a full manual queue.</li></ul>
+<hr>
+<h2>Tech stack</h2>
+<ul><li><strong>n8n</strong> - Stripe trigger, branching, dedup check, HTTP calls and error routing</li><li><strong>Stripe</strong> - <code>checkout.session.completed</code> webhook, registered in test mode, line items read via the API</li><li><strong>HubSpot CRM</strong> - contact upsert, custom contact properties, deal creation, v3 Lists (Segments) API</li><li><strong>Slack</strong> - instructor DM, ops warnings channel, automation-errors channel</li><li><strong>Google Sheets</strong> - the ops enrollment log, 8 mapped columns</li><li><strong>n8n Data Tables</strong> - Course Config (price ID to course, instructor, welcome list) and Enrollment Log (dedup)</li></ul>
+<hr>
+<h2>What works</h2>
+<ul><li>End to end on a real Stripe checkout: contact, deal, welcome list, instructor DM and ops row, with no human step</li><li>Dedup proven live - a resent event produces zero output</li><li>The welcome-list response is checked explicitly, which is what caught three real failures during the build</li><li>A payer with no matching contact still gets full access, and ops gets a specific flagged row instead of a silent gap</li><li>Course and instructor routing lives in a table ops can edit, so a new course is a row, not a code change</li><li>Failures route to a visible Slack channel rather than a log nobody reads</li></ul>
+<hr>
+<h2>Scope call - v1 in a day vs trustworthy in a week</h2>
+<p><strong>v1 in a day</strong> ships what the buyer feels: Stripe trigger, contact, deal, course tag and welcome email, ops row. Mismatch handled by create-plus-flag. Watched manually for a few days.</p>
+<p><strong>A proper week</strong> makes it trustworthy: retries and a dead-letter alert channel, the daily reconciliation monitor, a maintained course config, logging, and the remaining edge cases (refunds, multiple courses in one checkout, currency), plus a short runbook.</p>
+<p>What I would knowingly carry as risk in v1: reconciliation, fuzzy second-match, retries. In practice, dedup and the explicit response check turned out to matter enough that I built both into v1 anyway, once I saw how easily the welcome-list step failed without anyone noticing.</p>
+<hr>
+<h2>Known gaps</h2>
+<ul><li><strong>Daily reconciliation not built.</strong> The scheduled cross-check between the enrollment log and actual welcome-list membership is designed but not built. It should exist before this runs against real money.</li><li><strong>Deal creation, not update.</strong> Every enrollment creates a new deal rather than checking for an existing open one first, so the returning-student case is not handled in this v1.</li><li><strong>A missing Course Config row is a silent no-op.</strong> Selling a new course without adding its row means the price lookup returns nothing. Worth an explicit alert.</li><li><strong>Refunds, multi-course checkouts and currency are out of scope</strong> for this version.</li></ul>
+<hr>
+<h2>Walkthrough</h2>
+<p class="walkthrough"><a href="https://www.loom.com/share/47b8f82fd104491db8eaad34ca27021b" target="_blank" rel="noopener noreferrer">Watch the walkthrough on Loom</a></p>
+<hr>
+<h2>Screenshots</h2>
+  </div>
+
+  <div class="case-links"><a class="btn" href="https://app.notion.com/p/3bc70072ce9281f9a3cff87234576969" target="_blank" rel="noopener noreferrer">Read the original on Notion</a></div>
+</main>
+
+<script src="../case.js?v=imn4j0"></script>
+</body>
+</html>

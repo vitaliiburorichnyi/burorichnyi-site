@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stale Deal Alerts with Escalation - Vitalii Burorichnyi</title>
+<meta name="description" content="Checks every open proposal daily, nudges the owning rep in Slack after three quiet working days, and escalates to the manager on day five.">
+<link rel="icon" href="../avatar.png">
+<link rel="apple-touch-icon" href="../avatar.png">
+
+<!-- Same pre-paint theme script as the map, so moving between them never flashes. -->
+<script>
+  (function () {
+    var stored = null;
+    try { stored = localStorage.getItem("theme"); } catch (e) { /* blocked */ }
+    var theme = (stored === "light" || stored === "dark") ? stored
+      : (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>
+
+<link rel="stylesheet" href="../styles.css?v=6ruha1">
+<link rel="stylesheet" href="../case.css?v=btmvpw">
+</head>
+<body class="case-body">
+
+<header class="case-header">
+  <a class="case-back" href="../#stale-deals">
+    <img src="../avatar.png" alt="" width="36" height="36">
+    <span>Back to the map</span>
+  </a>
+  <button id="theme-toggle" class="icon-btn" type="button" aria-label="Switch to light theme">
+    <svg class="icon icon--sun" viewBox="0 0 24 24" width="18" height="18" fill="none"
+         stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.2 5.2l1.5 1.5M17.3 17.3l1.5 1.5M18.8 5.2l-1.5 1.5M6.7 17.3l-1.5 1.5"/>
+    </svg>
+    <svg class="icon icon--moon" viewBox="0 0 24 24" width="18" height="18" fill="none"
+         stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M20.1 14.3A8.2 8.2 0 0 1 9.7 3.9a8.6 8.6 0 1 0 10.4 10.4Z"/>
+    </svg>
+  </button>
+</header>
+
+<main class="case">
+  <p class="eyebrow">Case study</p>
+  <h1>Stale Deal Alerts with Escalation</h1>
+  <p class="subtitle">Daily Staleness Detection, Rep Nudge and Manager Escalation Across HubSpot and Slack</p>
+
+  <div class="case-meta">
+    <span>Solo build</span>
+    <span>n8n</span><span>HubSpot</span><span>Slack</span><span>n8n Data Table</span>
+  </div>
+
+  <div class="case-body-text">
+<p>The original design assumed a HubSpot field called <code>hs_lastactivitydate</code>. Pulling the real property list from the portal (<code>GET /crm/v3/properties/deals</code>) showed it does not exist. The actual field is <strong><code>notes_last_updated</code></strong>, and it is read-only, which is correct behaviour: it should reflect genuine rep activity rather than something anyone can overwrite.</p>
+<p>That is the reason this case exists. The design existed on paper first - trigger, condition, action. I built it live in n8n against a real HubSpot portal and a real Slack workspace instead, and every point where the real API contradicted the plan is written down below.</p>
+<hr>
+<h2>Context</h2>
+<p><strong>Company:</strong> EdTech company - online course provider<br><strong>Systems:</strong> HubSpot CRM and Slack, already connected<br><strong>Situation:</strong> Deals go cold in the &quot;Proposal Sent&quot; stage because reps are not following up consistently<br><strong>Process today:</strong> The manager runs a manual check every Friday - export HubSpot to Google Sheets, colour-code by last activity date, post a Slack message tagging each rep<br><strong>Core problem:</strong> ~90 minutes a week of manual work that only catches a cooling deal once a week</p>
+<p><strong>Definition used:</strong> a deal is stale when it sits in <em>Proposal Sent</em> with no logged activity (call, email, meeting, note) for 3 working days. Two custom deal properties track alert state, two more handle the parking exception.</p>
+<hr>
+<h2>Problem</h2>
+<div class="table-wrap"><table><tr><th scope="col">Issue</th><th scope="col">Detail</th></tr><tr><td>Manual ritual</td><td>~90 min every Friday: export, colour-code, post</td></tr><tr><td>Frequency</td><td>Weekly only - a deal can cool for up to 7 days before anyone notices</td></tr><tr><td>Visibility</td><td>No automated alert system exists at all</td></tr><tr><td>Detection quality</td><td>Colour-coding by eye, so a busy Friday means a missed deal</td></tr></table></div>
+<hr>
+<h2>Solution</h2>
+<p>Built in <strong>n8n</strong>, running daily instead of the old once-a-week manual export.</p>
+<pre><code>TRIGGER   Every weekday at 09:00 (scheduled, cron 0 0 9 * * 1-5)
+   |
+FETCH     All deals where Pipeline Stage = &quot;Proposal Sent&quot;
+   |
+CONDITION Flag a deal as STALE if ALL are true:
+          - Working days since Last Activity Date &gt;= 3
+          - Deal is NOT parked (see exception below)
+          - Deal has an owner and an amount
+   |
+GROUP     Group the stale deals by deal owner (rep)
+   |
+ACTION    Post ONE Slack message per rep, tagging them:
+          &quot;@rep - 1 deal stale in Proposal Sent:
+             - Acme Corp, $4,000, 4 days no activity
+           Please follow up today.&quot;
+   |
+ESCALATE  If a flagged deal is still stale on day 5,
+          post it to the manager escalation channel instead of the rep.</code></pre>
+<ul><li><strong>Trigger:</strong> time-based, daily, 9:00 AM. Catches a cooling deal in 1-2 days instead of up to 7.</li><li><strong>Condition:</strong> measures real silence since the last logged activity, not just time-in-stage.</li><li><strong>Action:</strong> one grouped message per rep to avoid spam, with amount and age so the rep can prioritize.</li></ul>
+<p>The full workflow: staleness evaluation, the escalation split, and the alert-level update running parallel to Slack.</p>
+<figure><img src="../cases/assets/stale-deals/01 - n8n canvas - full workflow.png" alt="" loading="lazy"></figure>
+<p>The day-5 escalation as it arrives in the manager channel, with deal name, amount, days stale and the owning rep.</p>
+<figure><img src="../cases/assets/stale-deals/03 - slack day5 manager escalation.png" alt="" loading="lazy"></figure>
+<hr>
+<h2>Build notes - what changed once the real APIs hit</h2>
+<p><strong>&quot;Last Activity Date&quot; does not exist as a standard field here.</strong> The plan assumed a property called <code>hs_lastactivitydate</code>. The real property list showed it is not there. The actual field is <code>notes_last_updated</code>, and it is read-only - it only updates when a genuine engagement (note, call, email) is logged against the deal. That is correct behaviour for production: the field should reflect real rep activity, not something anyone can overwrite. For testing, backdated Notes were created through the HubSpot Notes API (<code>POST /crm/v3/objects/notes</code> with <code>hs_timestamp</code> set) so the staleness math had real data to work against.</p>
+<p><strong>Rep lookup uses a maintained directory, not email matching.</strong> The plan assumed HubSpot owner email = Slack user email, matched live via <code>users.lookupByEmail</code>. In testing the two did not match - different addresses for the same person. Instead of a fragile email-matching step, a small n8n Data Table (the rep directory) maps <code>ownerId</code> to <code>repName</code> to <code>slackUserId</code>. The workflow looks up the HubSpot owner ID and gets the Slack user ID directly. Same pattern as the course-to-instructor map in the enrollment build: one consistent approach across both automations, a small maintained lookup table instead of trusting two systems to agree on identity. Onboarding a new rep becomes a one-line table addition, not a code change.</p>
+<p><strong>One token, two credential entries.</strong> The HubSpot Private App token had to be attached twice in n8n as two separate credentials - <code>hubspotAppToken</code> for the dedicated HubSpot nodes, and a generic Bearer credential for the raw HTTP Request node, because n8n's HTTP Request node cannot accept the dedicated type. Both point at the same token. Rotating it means updating both.</p>
+<hr>
+<h2>State tracking, proven idempotent</h2>
+<p>Two custom deal properties carry the state: <strong><code>stale_alert_level</code></strong> (0 = none, 1 = rep pinged, 2 = manager escalated) and <strong><code>stale_alert_last_sent</code></strong> (datetime).</p>
+<p>Each alerted deal gets its level updated in the same run, <strong>in parallel with the Slack post rather than after it</strong>. That is deliberate: the alert-level advance should not depend on Slack succeeding, otherwise a Slack hiccup would fire the same alert again the next morning. Catching a Slack failure is the job of a separate error-monitoring workflow, not of blocking the state update.</p>
+<p><strong>Proven live:</strong> re-running the workflow immediately after a successful alert produces zero output. No repeat pings.</p>
+<p>The state as it sits on the deal record: <code>stale_alert_level</code> at 1, the timestamp of that alert, the read-only Last Activity Date driven by the backdated note, and an empty <code>parked_until</code>.</p>
+<figure><img src="../cases/assets/stale-deals/02 - hubspot deal record - alert state and last activity.png" alt="" loading="lazy"></figure>
+<hr>
+<h2>Edge cases - a deal intentionally parked</h2>
+<p>Custom deal property <strong><code>parked_until</code></strong> (date). When a rep or manager knows a deal is on hold, they set the date. The automation skips any deal whose <code>parked_until</code> is in the future. When the date passes, the deal re-enters the normal check automatically. Optional <strong><code>park_reason</code></strong> (text) keeps it auditable.</p>
+<p><em>Why a date and not a checkbox:</em> a checkbox gets set once and forgotten, so deals hide forever. A date auto-expires, so parking is deliberate and temporary.</p>
+<div class="table-wrap"><table><tr><th scope="col">Property</th><th scope="col">Type</th><th scope="col">Purpose</th></tr><tr><td><code>parked_until</code></td><td>Date picker</td><td>Deal is skipped while this date is in the future</td></tr><tr><td><code>park_reason</code></td><td>Single-line text</td><td>Optional audit trail for why a deal was parked</td></tr><tr><td><code>stale_alert_level</code></td><td>Number</td><td>0 = none, 1 = rep pinged, 2 = manager escalated</td></tr><tr><td><code>stale_alert_last_sent</code></td><td>Date/time</td><td>Timestamp of the last alert, prevents repeat pings</td></tr></table></div>
+<hr>
+<h2>Test results (live, not simulated)</h2>
+<p>Three test deals created directly through the HubSpot API, each with a real backdated Note to set its activity age:</p>
+<div class="table-wrap"><table><tr><th scope="col">Deal</th><th scope="col">Amount</th><th scope="col">Days stale</th><th scope="col">Expected result</th><th scope="col">Actual result</th></tr><tr><td>TEST - Deal A</td><td>$4,000</td><td>4 working days</td><td>Rep ping, level to 1</td><td>✅ Confirmed</td></tr><tr><td>TEST - Deal B</td><td>$6,000</td><td>6 working days</td><td>Manager escalation, level to 2</td><td>✅ Confirmed</td></tr><tr><td>TEST - Deal C</td><td>$3,000</td><td>Parked (<code>parked_until</code> next week)</td><td>Skipped entirely, level stays 0</td><td>✅ Confirmed</td></tr></table></div>
+<p><strong>Idempotency test:</strong> re-ran the workflow immediately afterwards. Zero items out of Evaluate Staleness, no Slack messages sent, no repeat pings. The <code>stale_alert_level</code> gate works as designed.</p>
+<p><strong>First run.</strong> Three deals fetched, two evaluated as stale, both routed to escalation, one Slack message posted and two deals updated.</p>
+<figure><img src="../cases/assets/stale-deals/04a - first run - two deals alerted.png" alt="" loading="lazy"></figure>
+<p><strong>Immediate re-run, no other changes.</strong> The same three deals are fetched, and Evaluate Staleness emits nothing. Every node downstream stays grey: no Slack message, no property write, no repeat ping.</p>
+<figure><img src="../cases/assets/stale-deals/04b - immediate re-run - zero items out.png" alt="" loading="lazy"></figure>
+<hr>
+<h2>Impact</h2>
+<ul><li>The Friday ritual (~90 min/week) is <strong>removed entirely: ~90 min/week saved, ~75+ hours/year.</strong></li><li>More valuable than the time: deals surface <strong>5x sooner</strong>, which recovers revenue that used to leak while a proposal went cold.</li><li><strong>Recommendation:</strong> the manager spends that recovered time <em>coaching on the flagged deals</em> - reviewing why proposals stall, helping reps with the reply - instead of building the report. The robot finds the problem, the manager adds judgement.</li></ul>
+<hr>
+<h2>Tech stack</h2>
+<ul><li><strong>n8n</strong> - schedule trigger, working-day math, branching and state updates</li><li><strong>HubSpot CRM</strong> - deals, custom properties, Notes API, owners API, Private App token</li><li><strong>Slack</strong> - bot app built from a manifest, rep DMs and a manager escalation channel</li><li><strong>n8n Data Table</strong> - the rep directory mapping HubSpot owner IDs to Slack member IDs</li></ul>
+<hr>
+<h2>What works</h2>
+<p>The obvious way this design backfires is alert fatigue. If it pings reps every morning about the same deal, they start ignoring it and real stale deals slip through anyway. Three things prevent that, built rather than planned:</p>
+<ul><li><strong>One alert per escalation level</strong>, not per day, with state tracked on the deal itself. Proven with a live re-run.</li><li><strong>Working days only</strong>, so a Friday proposal is not &quot;stale&quot; on Monday.</li><li><strong>Reps can park deals</strong>, and the tone is a plain follow-up nudge rather than a public call-out.</li></ul>
+<p>Beyond that: rep grouping means one message per person instead of one per deal; escalation reaches the manager channel only when a deal is still cold on day 5; and the alert-level update survives a Slack outage because it does not sit behind it.</p>
+<blockquote><em>I've built a very similar Slack escalation system in a previous role (30-minute nudge to the rep, 1-hour escalation to the manager), so this design reflects real work, not just theory.</em></blockquote>
+<hr>
+<h2>Known gaps</h2>
+<ul><li><strong>Error-monitoring workflow not built.</strong> An n8n Error Trigger posting failures to an automation-errors channel is the intended companion to the parallel state update. Until it exists, a HubSpot or Slack node failure would pass unnoticed. This should be built before going live.</li><li><strong>Not yet activated.</strong> The build is validated and tested end to end, but the schedule trigger is off pending final review.</li><li><strong>The rep directory needs a human.</strong> A rep with no row still gets their deals found and levelled correctly, but no Slack DM is sent. Adding a rep to HubSpot means adding a row here too.</li><li><strong>Single pipeline stage.</strong> The check covers Proposal Sent only. Other stages that can go cold are not watched.</li></ul>
+<hr>
+<h2>Walkthrough</h2>
+<p class="walkthrough"><a href="https://www.loom.com/share/6c1967ec2fab4c5285401e22f28b2a61" target="_blank" rel="noopener noreferrer">Watch the walkthrough on Loom</a></p>
+<hr>
+<h2>Screenshots</h2>
+  </div>
+
+  <div class="case-links"><a class="btn" href="https://app.notion.com/p/3bc70072ce92811b9c8ee6068bd3ee80" target="_blank" rel="noopener noreferrer">Read the original on Notion</a></div>
+</main>
+
+<script src="../case.js?v=imn4j0"></script>
+</body>
+</html>

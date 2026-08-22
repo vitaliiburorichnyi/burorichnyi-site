@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Call QA &amp; Retention Automation - Vitalii Burorichnyi</title>
+<meta name="description" content="Transcribes every support call, scores it across 8 criteria, and drafts a retention email for any call below threshold - sent only on manager approval.">
+<link rel="icon" href="../avatar.png">
+<link rel="apple-touch-icon" href="../avatar.png">
+
+<!-- Same pre-paint theme script as the map, so moving between them never flashes. -->
+<script>
+  (function () {
+    var stored = null;
+    try { stored = localStorage.getItem("theme"); } catch (e) { /* blocked */ }
+    var theme = (stored === "light" || stored === "dark") ? stored
+      : (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>
+
+<link rel="stylesheet" href="../styles.css?v=6ruha1">
+<link rel="stylesheet" href="../case.css?v=btmvpw">
+</head>
+<body class="case-body">
+
+<header class="case-header">
+  <a class="case-back" href="../#call-qa">
+    <img src="../avatar.png" alt="" width="36" height="36">
+    <span>Back to the map</span>
+  </a>
+  <button id="theme-toggle" class="icon-btn" type="button" aria-label="Switch to light theme">
+    <svg class="icon icon--sun" viewBox="0 0 24 24" width="18" height="18" fill="none"
+         stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.2 5.2l1.5 1.5M17.3 17.3l1.5 1.5M18.8 5.2l-1.5 1.5M6.7 17.3l-1.5 1.5"/>
+    </svg>
+    <svg class="icon icon--moon" viewBox="0 0 24 24" width="18" height="18" fill="none"
+         stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M20.1 14.3A8.2 8.2 0 0 1 9.7 3.9a8.6 8.6 0 1 0 10.4 10.4Z"/>
+    </svg>
+  </button>
+</header>
+
+<main class="case">
+  <p class="eyebrow">Case study</p>
+  <h1>Call QA &amp; Retention Automation</h1>
+  <p class="subtitle">Customer Signal AI:</p>
+
+  <div class="case-meta">
+    <span>Solo build</span>
+    <span>n8n</span><span>Whisper</span><span>GPT-5 mini</span><span>Google Drive</span><span>Slack</span><span>Telegram</span>
+  </div>
+
+  <div class="case-body-text">
+<p>Automated Call Scoring, Agent Coaching &amp; Client Retention for a Premium Bag Brand</p>
+<hr>
+<h2>Context</h2>
+<p><strong>Company:</strong> HUSH - B2C premium bag e-commerce</p>
+<p><strong>Industry:</strong> Online Retail (Fashion Accessories)</p>
+<p><strong>Target clients:</strong> End consumers purchasing premium bags online</p>
+<p><strong>Support volume:</strong> Inbound customer service calls (daily)</p>
+<p><strong>Team:</strong> Customer service agents + 1 manager</p>
+<p><strong>Core problem:</strong> Zero visibility into call quality - no QA, no coaching, no retention follow-up</p>
+<hr>
+<h2>Problem</h2>
+<div class="table-wrap"><table><tr><th scope="col">Metric</th><th scope="col">Value</th><th scope="col">Issue</th></tr><tr><td>Call QA coverage</td><td>0%</td><td>No calls reviewed systematically</td></tr><tr><td>Agent feedback</td><td>None</td><td>Coaching was ad-hoc and reactive</td></tr><tr><td>Bad call detection</td><td>Never</td><td>Poor calls went completely unnoticed</td></tr><tr><td>Client retention</td><td>None</td><td>At-risk customers never followed up</td></tr><tr><td>Manager time on QA</td><td>0 (not done)</td><td>Too time-consuming to do manually</td></tr></table></div>
+<p>The customer service team handled inbound calls daily with no quality control in place. Managers had no way to know which calls went badly, which agents needed coaching, or which customers were at risk of churning. Every poor call was a silent loss - no detection, no recovery.</p>
+<hr>
+<h2>Solution</h2>
+<p>Built a <strong>4-workflow AI automation system</strong> that transcribes, scores, alerts, and recovers:</p>
+<pre><code>Call recording → Google Drive
+                      ↓
+            WF01: Transcribe &amp; Score
+                      ↓
+         Filter: Audio → Whisper → GPT QA Score
+                      ↓
+              Log to Google Sheets
+                      ↓
+                 Score &lt; 3.0?
+                      ↓
+        ┌─────────────┴─────────────┐
+     YES                           NO
+Slack Alert                       End
++ Call WF03
+        ↓
+WF03: Draft Retention Email
+        ↓
+  AI analyzes call → drafts email
+        ↓
+  Save to Sheets → Telegram to Manager
+        ↓
+WF04: Manager Decision (Telegram buttons)
+        ↓
+   ┌────┴────┐
+ Send      Refuse
+   ↓          ↓
+WF02:      Mark as
+Get email  Rejected
++ Send</code></pre>
+<h3>WF01 - Call QA: Transcribe &amp; Score</h3>
+<p>Picks up every new call recording automatically. Transcribes using Whisper, scores the agent across 8 QA criteria (1-5 scale) using GPT-5-mini, logs full results to Google Sheets, and fires a Slack alert for any call scoring below 3.0.</p>
+<h3>WF02 - Call Recording URL to Email</h3>
+<p>Sub-workflow triggered on manager approval. Extracts the Google Drive file ID from the recording URL and retrieves the client email for sending the retention email.</p>
+<h3>WF03 - On Bad Call: Notify Manager</h3>
+<p>Triggered automatically when score &lt; 3.0. Reads the call transcription, runs a second AI agent to draft a personalized retention email and write a 2-3 sentence call summary for the manager. Sends everything to the manager via Telegram with Send/Refuse buttons.</p>
+<h3>WF04 - On Manager Decision: Send Email</h3>
+<p>Handles the manager’s Telegram button press. Checks if the record is still pending (duplicate protection), routes to approve or reject, updates status in Google Sheets, and confirms the decision back to the manager.</p>
+<hr>
+<h2>Process</h2>
+<h3>1. QA Scoring Framework</h3>
+<ul><li>8 criteria scored 1-5 by GPT-5-mini</li><li>Score = average of all 8 criteria (1.0-5.0)</li><li>Structured Output Parser enforces strict JSON - auto-retry on malformed output</li><li>Voicemail and silent recordings filtered automatically (score=0, skipped)</li><li>Calls in Ukrainian, English, or mixed language fully supported</li></ul>
+<h3>2. Scoring Criteria</h3>
+<div class="table-wrap"><table><tr><th scope="col">Criterion</th><th scope="col">What’s Evaluated</th></tr><tr><td>Greetings</td><td>Professional opening, self-identification</td></tr><tr><td>Active Listening</td><td>Let customer speak, paraphrasing</td></tr><tr><td>Needs Discovery</td><td>Clarifying questions before solution</td></tr><tr><td>Empathy</td><td>Acknowledging emotions and frustration</td></tr><tr><td>Expertise</td><td>Product/process knowledge demonstrated</td></tr><tr><td>Clear Solution</td><td>Concrete resolution or next step given</td></tr><tr><td>Next Steps</td><td>Timeline and ownership confirmed</td></tr><tr><td>Closing</td><td>Professional, positive call ending</td></tr></table></div>
+<h3>3. Alert &amp; Retention Flow</h3>
+<div class="table-wrap"><table><tr><th scope="col">Score</th><th scope="col">Trigger</th><th scope="col">Action</th></tr><tr><td>≥ 3.0</td><td>Good/Fair call</td><td>Log to Sheets only</td></tr><tr><td>&lt; 3.0</td><td>Poor call</td><td>Slack alert + AI retention email draft + Telegram to manager</td></tr></table></div>
+<h3>4. n8n Workflow Architecture</h3>
+<div class="table-wrap"><table><tr><th scope="col">Workflow</th><th scope="col">Trigger</th><th scope="col">Function</th></tr><tr><td>WF01 - Call QA: Transcribe &amp; Score</td><td>Google Drive (new file)</td><td>Transcribe → Score → Log → Alert</td></tr><tr><td>WF02 - Recording URL to Email</td><td>Sub-workflow call</td><td>Extract file ID → Get client email</td></tr><tr><td>WF03 - On Bad Call: Notify Manager</td><td>Sub-workflow call</td><td>Draft email → Save → Telegram</td></tr><tr><td>WF04 - On Manager Decision</td><td>Telegram button press</td><td>Approve/Reject → Update Sheets → Confirm</td></tr></table></div>
+<h3>5. Manager Approval Flow</h3>
+<div class="table-wrap"><table><tr><th scope="col">Action</th><th scope="col">Trigger</th><th scope="col">Result</th></tr><tr><td>Send</td><td>Manager taps ✅ Send Email</td><td>Email sent, status = sent, timestamp logged</td></tr><tr><td>Refuse</td><td>Manager taps ❌ Don’t Send</td><td>Status = rejected, manager notified</td></tr><tr><td>Double tap</td><td>Button pressed again</td><td>“Already processed” message, no action</td></tr></table></div>
+<hr>
+<h2>Results</h2>
+<div class="table-wrap"><table><tr><th scope="col">Metric</th><th scope="col">Before</th><th scope="col">After</th><th scope="col">Change</th></tr><tr><td>Call QA coverage</td><td>0%</td><td>100%</td><td><strong>↑ Full coverage</strong></td></tr><tr><td>Time to detect bad call</td><td>Never</td><td>&lt; 1 hour</td><td><strong>New</strong></td></tr><tr><td>Manager response to bad call</td><td>Never</td><td>&lt; 5 minutes</td><td><strong>New</strong></td></tr><tr><td>Retention email draft time</td><td>N/A (not done)</td><td>Automatic</td><td><strong>New</strong></td></tr><tr><td>Agent feedback quality</td><td>Ad-hoc</td><td>Structured, per-criterion</td><td><strong>↑ Systematic</strong></td></tr><tr><td>Coaching data available</td><td>None</td><td>Every call logged</td><td><strong>New</strong></td></tr></table></div>
+<hr>
+<h2>Tech Stack</h2>
+<ul><li><strong>n8n</strong> (self-hosted, Docker + ngrok) - workflow automation engine</li><li><strong>OpenAI Whisper</strong> - call transcription</li><li><strong>GPT-5-mini</strong> - QA scoring + retention email drafting</li><li><strong>Google Drive</strong> - call recording storage and trigger (Phase 1)</li><li><strong>Google Sheets</strong> - central data store for scores, drafts, and decisions</li><li><strong>Slack</strong> - real-time bad CX alerts to team channel</li><li><strong>Telegram Bot API</strong> - manager approval interface with inline buttons</li></ul>
+<hr>
+<h2>What Works</h2>
+<ul><li>Full end-to-end automation: recording uploaded → transcribed → scored → alerted → email drafted → manager approves → sent</li><li>100% call QA coverage with zero manual effort</li><li>Voicemail filtering - silent recordings never pollute the QA log</li><li>Structured JSON output enforced - AI retries automatically on malformed responses</li><li>Duplicate-click protection - manager can’t accidentally send the same email twice</li><li>Mixed language support - Ukrainian, English, or mixed calls all handled correctly</li><li>Full audit trail - every score, draft, decision, and timestamp logged to Sheets</li></ul>
+<hr>
+<h2>What Can Be Improved</h2>
+<ul><li><strong>Call trigger</strong> - Google Drive upload is manual; Zadarma webhook will automate this completely</li><li><strong>Client email</strong> - currently retrieved from recording URL; HubSpot lookup by phone will make it fully dynamic</li><li><strong>Agent dashboard</strong> - Sheets log is functional but a Looker/Data Studio dashboard would give better coaching visibility</li><li><strong>Score threshold</strong> - 3.0 is conservative; can be raised to 3.5 for stricter QA standards</li></ul>
+<hr>
+<h2>Phase 2 - Production Architecture (Planned)</h2>
+<p>Pending client approval:</p>
+<ol><li><strong>Zadarma SIP webhook</strong> → replaces Google Drive trigger, fires automatically when call ends</li><li><strong>HubSpot CRM</strong> → contact lookup by phone number, call activity logging per agent</li><li><strong>Agent performance dashboard</strong> → weekly coaching report per agent from Sheets data</li></ol>
+<hr>
+<h2>Screenshots</h2>
+<p>WF01 - Call QA: Transcribe &amp; Score canvas</p>
+<figure><img src="../cases/assets/call-qa/01.png" alt="" loading="lazy"></figure>
+<p>WF03 - On Bad Call: Notify Manager canvas</p>
+<figure><img src="../cases/assets/call-qa/03.png" alt="" loading="lazy"></figure>
+<p>WF04 - On Manager Decision canvas</p>
+<figure><img src="../cases/assets/call-qa/04.png" alt="" loading="lazy"></figure>
+<p>Slack - Bad CX Alert</p>
+<figure><img src="../cases/assets/call-qa/Slack.png" alt="" loading="lazy"></figure>
+<p>Telegram - Manager Retention Alert with buttons</p>
+<figure><img src="../cases/assets/call-qa/tg.png" alt="" loading="lazy"></figure>
+<p>Google Sheets - Email Draft + Status</p>
+<figure><img src="../cases/assets/call-qa/Screenshot_2026-06-04_at_17.54.20.png" alt="" loading="lazy"></figure>
+<hr>
+<h2>GitHub Repository</h2>
+<p>🔗 <a href="https://github.com/vitaliiburorichnyi/customer-signal-ai" target="_blank" rel="noopener noreferrer">https://github.com/vitaliiburorichnyi/customer-signal-ai</a></p>
+  </div>
+
+  <div class="case-links"><a class="btn" href="https://app.notion.com/p/37570072ce92809890bafcb6657f2565" target="_blank" rel="noopener noreferrer">Read the original on Notion</a><a class="btn" href="https://github.com/vitaliiburorichnyi/customer-signal-ai" target="_blank" rel="noopener noreferrer">Code on GitHub</a></div>
+</main>
+
+<script src="../case.js?v=imn4j0"></script>
+</body>
+</html>

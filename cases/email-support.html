@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Email Support System - Vitalii Burorichnyi</title>
+<meta name="description" content="Classifies every incoming email P1-P4, auto-replies to routine ones, and fires an instant alert on legal or fraud threats.">
+<link rel="icon" href="../avatar.png">
+<link rel="apple-touch-icon" href="../avatar.png">
+
+<!-- Same pre-paint theme script as the map, so moving between them never flashes. -->
+<script>
+  (function () {
+    var stored = null;
+    try { stored = localStorage.getItem("theme"); } catch (e) { /* blocked */ }
+    var theme = (stored === "light" || stored === "dark") ? stored
+      : (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>
+
+<link rel="stylesheet" href="../styles.css?v=6ruha1">
+<link rel="stylesheet" href="../case.css?v=btmvpw">
+</head>
+<body class="case-body">
+
+<header class="case-header">
+  <a class="case-back" href="../#email-support">
+    <img src="../avatar.png" alt="" width="36" height="36">
+    <span>Back to the map</span>
+  </a>
+  <button id="theme-toggle" class="icon-btn" type="button" aria-label="Switch to light theme">
+    <svg class="icon icon--sun" viewBox="0 0 24 24" width="18" height="18" fill="none"
+         stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.2 5.2l1.5 1.5M17.3 17.3l1.5 1.5M18.8 5.2l-1.5 1.5M6.7 17.3l-1.5 1.5"/>
+    </svg>
+    <svg class="icon icon--moon" viewBox="0 0 24 24" width="18" height="18" fill="none"
+         stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M20.1 14.3A8.2 8.2 0 0 1 9.7 3.9a8.6 8.6 0 1 0 10.4 10.4Z"/>
+    </svg>
+  </button>
+</header>
+
+<main class="case">
+  <p class="eyebrow">Case study</p>
+  <h1>AI Email Support System</h1>
+  <p class="subtitle">Automated Classification, Routing &amp; Analytics for a Bag Store</p>
+
+  <div class="case-meta">
+    <span>Solo build</span>
+    <span>n8n</span><span>GPT-4o-mini</span><span>Gmail API</span><span>Google Sheets</span><span>Telegram</span>
+  </div>
+
+  <div class="case-body-text">
+<h2>Context</h2>
+<p><strong>Company:</strong> Hush - B2C premium bag e-commerce</p>
+<p><strong>Industry:</strong> Online Retail (Fashion Accessories)</p>
+<p><strong>Target clients:</strong> End consumers purchasing bags online</p>
+<p><strong>Support volume:</strong> 15 -30 emails/day</p>
+<p><strong>Team:</strong> 1 owner managing support manually</p>
+<p><strong>Core problem:</strong> Every email handled manually - no triage, no prioritization, no analytics</p>
+<hr>
+<h2>Problem</h2>
+<div class="table-wrap"><table><tr><th scope="col">Metric</th><th scope="col">Value</th><th scope="col">Issue</th></tr><tr><td>Email handling</td><td>100% manual</td><td>No triage or prioritization</td></tr><tr><td>Response time</td><td>Hours to days</td><td>Urgent cases missed in queue</td></tr><tr><td>Escalation detection</td><td>None</td><td>Legal threats not flagged immediately</td></tr><tr><td>Support analytics</td><td>None</td><td>No data on categories, sentiment, volume</td></tr><tr><td>Human time wasted</td><td>2-4 hrs/day</td><td>Standard FAQs answered manually every time</td></tr></table></div>
+<p>The owner was answering every email manually - from “what’s the zipper material?” to legal threats - with no system to separate urgent from routine. At 15-30 emails per day, this consumed a significant part of the working day with no prioritization or visibility into patterns.</p>
+<hr>
+<h2>Solution</h2>
+<p>Built a <strong>4-workflow AI email support system</strong> that classifies, routes, responds, and analyzes:</p>
+<pre><code>Gmail (unread) → Filter → AI Classifier → Parser
+                                              ↓
+                                        Switch Router
+                                              ↓
+              ┌───────────┬───────────┬───────────┬───────────┐
+              P1          P2          P3          P4        Default
+         Draft+Telegram  Draft     Auto-Reply   Tag       Needs-Human
+              └───────────┴───────────┴───────────┴───────────┘
+                                              ↓
+                                     Google Sheets Log
+                                              ↓
+                                  Analytics Agent (Chat UI)</code></pre>
+<h3>WF1 - Email Support Automation</h3>
+<p>Processes every incoming email automatically. AI classifies priority (P1-P4), category, sentiment, and generates a suggested response. Routes to correct action based on priority and requires_human flag.</p>
+<h3>WF2 - Report for Period</h3>
+<p>On-demand analytics tool. Accepts a date range and returns 4 metrics: total emails, % negative sentiment, % requiring human intervention, top 3 categories.</p>
+<h3>WF3 - Comparison of Two Periods</h3>
+<p>Compares two date ranges side by side. Returns % change for each metric with plain-language conclusions: improvement, deterioration, growth, decline, or stable.</p>
+<h3>WF4 - Customer Support Analyst (AI Agent)</h3>
+<p>Natural language chat interface. The owner asks questions in plain text - the agent detects dates in any format, selects the right tool, and returns a readable summary.</p>
+<hr>
+<h2>Process</h2>
+<h3>1. Prompt Design</h3>
+<ul><li>Full system prompt rewritten for Hush (adapted from course template)</li><li>6 email categories specific to bag e-commerce</li><li>OVERRIDE rules for human requests and influencer inquiries</li><li>Language auto-detection: responds in customer’s language</li><li>Temperature 0.2 for consistent JSON output</li></ul>
+<h3>2. Priority System</h3>
+<div class="table-wrap"><table><tr><th scope="col">Priority</th><th scope="col">Trigger</th><th scope="col">Action</th></tr><tr><td>P1</td><td>Legal threat, fraud, authenticity dispute, media threat</td><td>Gmail draft + Telegram alert</td></tr><tr><td>P2</td><td>Damaged item, delay 7d+, defective product, angry tone</td><td>Gmail draft only</td></tr><tr><td>P3</td><td>Standard inquiry - order status, product info, returns</td><td>Auto-reply after 30s</td></tr><tr><td>P4</td><td>Thank you, positive feedback, low-urgency</td><td>Tag only, no reply</td></tr><tr><td>Default</td><td>requires_human=true, explicit human request</td><td>Needs-Human label</td></tr></table></div>
+<h3>3. n8n Workflow Architecture</h3>
+<div class="table-wrap"><table><tr><th scope="col">Workflow</th><th scope="col">Trigger</th><th scope="col">Function</th></tr><tr><td>WF1 - Email Automation</td><td>Gmail Trigger (poll)</td><td>Filter → AI → Route → Act → Log</td></tr><tr><td>WF2 - Period Report</td><td>Sub-workflow call</td><td>Read Sheets → Filter → 4 metrics</td></tr><tr><td>WF3 - Period Comparison</td><td>Sub-workflow call</td><td>Calls WF2 twice → merge → % change</td></tr><tr><td>WF4 - Analyst Agent</td><td>Chat Trigger</td><td>NL query → tool selection → readable answer</td></tr></table></div>
+<h3>4. Escalation Rules</h3>
+<div class="table-wrap"><table><tr><th scope="col">Rule</th><th scope="col">Trigger</th><th scope="col">Result</th></tr><tr><td>Legal threat</td><td>Lawyer, lawsuit, chargeback, consumer authority</td><td>P1 + Telegram</td></tr><tr><td>Authenticity dispute</td><td>Fake, counterfeit, not as described</td><td>P1 + Telegram</td></tr><tr><td>Media threat</td><td>Press, social media, going public</td><td>P1 + Telegram</td></tr><tr><td>Human request</td><td>“connect me with a real person”</td><td>Default branch</td></tr><tr><td>Influencer inquiry</td><td>Collaboration, gifting, followers, sponsorship</td><td>Default branch</td></tr><tr><td>Aggressive tone</td><td>Threatening or abusive language</td><td>P2 minimum</td></tr></table></div>
+<hr>
+<h2>Results</h2>
+<div class="table-wrap"><table><tr><th scope="col">Metric</th><th scope="col">Before</th><th scope="col">After</th><th scope="col">Change</th></tr><tr><td>Email triage</td><td>100% manual</td><td>100% automated</td><td><strong>↓ 0 min/email</strong></td></tr><tr><td>Time spent on support</td><td>2-4 hrs/day</td><td>~20 min/day (review only)</td><td><strong>↓ 85%</strong></td></tr><tr><td>P1 alert speed</td><td>Never</td><td>Instant Telegram</td><td><strong>New</strong></td></tr><tr><td>P3 response time</td><td>Hours</td><td>30 seconds</td><td><strong>↓ 99%</strong></td></tr><tr><td>Support analytics</td><td>None</td><td>On-demand via chat</td><td><strong>New</strong></td></tr><tr><td>Period comparison</td><td>None</td><td>Automated % change</td><td><strong>New</strong></td></tr><tr><td>Duplicate processing</td><td>Risk</td><td>Eliminated</td><td><strong>Fixed</strong></td></tr></table></div>
+<hr>
+<h2>Tech Stack</h2>
+<ul><li><strong>n8n</strong> (self-hosted) - workflow automation engine</li><li><strong>OpenAI GPT-4o-mini</strong> - email classification and response generation</li><li><strong>Gmail API</strong> - trigger, drafts, labels, auto-replies</li><li><strong>Google Sheets</strong> - support log and analytics data source</li><li><strong>Telegram Bot API</strong> - P1 escalation alerts to owner</li><li><strong>OpenRouter</strong> - LLM provider for AI Agent chat interface</li></ul>
+<hr>
+<h2>What Works</h2>
+<ul><li>Full end-to-end automation: email arrives → classified → routed → responded → logged</li><li>P1 legal/fraud alerts fire instantly to owner via Telegram</li><li>P3 standard inquiries answered automatically in 30 seconds</li><li>Duplicate processing eliminated - every email marked as read after processing</li><li>Analytics agent answers plain-language questions about support performance</li><li>Language auto-detection - responds in customer’s language</li><li>Empty period handling - analytics workflows return clean zeros, never crash</li></ul>
+<hr>
+<h2>What Can Be Improved</h2>
+<ul><li><strong>Timestamp format</strong> - custom format (HH:MM DD-MM-YYYY) complicates date filtering; switch to ISO 8601 in future</li><li><strong>P2 Telegram alert</strong> - currently draft-only; add optional alert for high-volume periods</li><li><strong>Sentiment trends</strong> - track sentiment per category over time, not just overall</li><li><strong>Auto-reply for P4</strong> - optionally send a short thank-you reply to positive feedback</li></ul>
+<hr>
+<h2>Development Plan</h2>
+<ol><li>Switch timestamp to ISO format → simplifies analytics queries</li><li>Add P2 Telegram alert with configurable threshold</li><li>Build category trend chart - weekly breakdown by category</li><li>Connect dedicated e-mail inbox instead of Gmail</li><li>Add weekly automated report → schedule WF2 every Monday to Telegram</li></ol>
+<hr>
+<h2>Loom Screencast</h2>
+<p class="walkthrough"><a href="https://www.loom.com/share/33ae8ffb552b42b09008fbf57e51ca31" target="_blank" rel="noopener noreferrer">Watch the walkthrough on Loom</a></p>
+<h2>Screenshots</h2>
+<p>WF1 - Email Support Automation canvas</p>
+<figure><img src="../cases/assets/email-support/Screenshot_2026-06-02_at_15.09.11.png" alt="" loading="lazy"></figure>
+<p>WF2 - Report for Period canvas</p>
+<figure><img src="../cases/assets/email-support/Screenshot_2026-06-02_at_12.55.38.png" alt="" loading="lazy"></figure>
+<p>WF3 - Comparison of Two Periods canvas</p>
+<figure><img src="../cases/assets/email-support/Screenshot_2026-06-02_at_12.55.46.png" alt="" loading="lazy"></figure>
+<p>WF4 - Customer Support Analyst canvas</p>
+<figure><img src="../cases/assets/email-support/Screenshot_2026-06-02_at_12.55.58.png" alt="" loading="lazy"></figure>
+<p>Google Sheets log</p>
+<figure><img src="../cases/assets/email-support/Sheets_screenshot.png" alt="" loading="lazy"></figure>
+<p>Execution History - P1 test</p>
+<figure><img src="../cases/assets/email-support/execution-history_-_5.png" alt="" loading="lazy"></figure>
+<p>Telegram P1 alert</p>
+<figure><img src="../cases/assets/email-support/Screenshot_2026-06-02_at_15.12.34.png" alt="" loading="lazy"></figure>
+<p>AI Agent chat response</p>
+<figure><img src="../cases/assets/email-support/Screenshot_2026-06-02_at_12.48.41.png" alt="" loading="lazy"></figure>
+<hr>
+<h2>GitHub Repository</h2>
+<p>🔗 <a href="https://github.com/vitaliiburorichnyi/hush-email-automation" target="_blank" rel="noopener noreferrer">https://github.com/vitaliiburorichnyi/hush-email-automation</a></p>
+  </div>
+
+  <div class="case-links"><a class="btn" href="https://app.notion.com/p/37370072ce928073b947e35b25dce33e" target="_blank" rel="noopener noreferrer">Read the original on Notion</a><a class="btn" href="https://github.com/vitaliiburorichnyi/hush-email-automation" target="_blank" rel="noopener noreferrer">Code on GitHub</a></div>
+</main>
+
+<script src="../case.js?v=imn4j0"></script>
+</body>
+</html>

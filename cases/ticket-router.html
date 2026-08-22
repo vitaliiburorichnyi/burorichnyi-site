@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Support Ticket Router with SLA Control - Vitalii Burorichnyi</title>
+<meta name="description" content="Classifies every ticket in ~8 seconds and enforces a 3-level SLA escalation chain so nothing slips.">
+<link rel="icon" href="../avatar.png">
+<link rel="apple-touch-icon" href="../avatar.png">
+
+<!-- Same pre-paint theme script as the map, so moving between them never flashes. -->
+<script>
+  (function () {
+    var stored = null;
+    try { stored = localStorage.getItem("theme"); } catch (e) { /* blocked */ }
+    var theme = (stored === "light" || stored === "dark") ? stored
+      : (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>
+
+<link rel="stylesheet" href="../styles.css?v=6ruha1">
+<link rel="stylesheet" href="../case.css?v=btmvpw">
+</head>
+<body class="case-body">
+
+<header class="case-header">
+  <a class="case-back" href="../#ticket-router">
+    <img src="../avatar.png" alt="" width="36" height="36">
+    <span>Back to the map</span>
+  </a>
+  <button id="theme-toggle" class="icon-btn" type="button" aria-label="Switch to light theme">
+    <svg class="icon icon--sun" viewBox="0 0 24 24" width="18" height="18" fill="none"
+         stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.2 5.2l1.5 1.5M17.3 17.3l1.5 1.5M18.8 5.2l-1.5 1.5M6.7 17.3l-1.5 1.5"/>
+    </svg>
+    <svg class="icon icon--moon" viewBox="0 0 24 24" width="18" height="18" fill="none"
+         stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M20.1 14.3A8.2 8.2 0 0 1 9.7 3.9a8.6 8.6 0 1 0 10.4 10.4Z"/>
+    </svg>
+  </button>
+</header>
+
+<main class="case">
+  <p class="eyebrow">Case study</p>
+  <h1>Support Ticket Router with SLA Control</h1>
+  <p class="subtitle">Automatic Classification, SLA Control &amp; Escalation for a Bag Store</p>
+
+  <div class="case-meta">
+    <span>Solo build</span>
+    <span>n8n</span><span>GPT-4o-mini</span><span>Gmail</span><span>Google Sheets</span><span>Slack</span>
+  </div>
+
+  <div class="case-body-text">
+<h2>Context</h2>
+<p><strong>Company:</strong> HUSH - B2C premium bag e-commerce</p>
+<p><strong>Industry:</strong> Online Retail (Fashion Accessories)</p>
+<p><strong>Target clients:</strong> End consumers purchasing premium bags online</p>
+<p><strong>Support volume:</strong> 50-80 tickets/day (up to 120+ during sales and ad campaigns)</p>
+<p><strong>Team:</strong> 3 operators, flexible scheduling, 09:00-22:00 shift, 1-2 on duty daily</p>
+<p><strong>Core problem:</strong> Tickets sorted manually, urgent requests lost in queue, zero SLA visibility, no escalation mechanism</p>
+<hr>
+<h2>Problem</h2>
+<div class="table-wrap"><table><tr><th scope="col">Metric</th><th scope="col">Value</th><th scope="col">Issue</th></tr><tr><td>Ticket triage</td><td>100% manual</td><td>No consistent prioritization</td></tr><tr><td>P1 identification</td><td>Inconsistent</td><td>Depended on which operator saw it first</td></tr><tr><td>SLA visibility</td><td>None</td><td>No one knew how long clients were waiting</td></tr><tr><td>Escalation on breach</td><td>Never</td><td>Missed tickets stayed missed</td></tr><tr><td>Operator triage time</td><td>60-90 min/day</td><td>Reading and sorting every message manually</td></tr><tr><td>Shift handover</td><td>Error-prone</td><td>Duplicate responses and missed tickets</td></tr></table></div>
+<p>Operators were manually reading every message and deciding priority on the fly - from “does this bag fit a laptop?” to legal threats - with no system to separate urgent from routine. P1 tickets (payment failures, active purchase decisions) were sitting in the same queue as influencer gifting requests.</p>
+<hr>
+<h2>Solution</h2>
+<p>Built a <strong>2-track AI ticket routing system</strong> that classifies, logs, notifies, and escalates automatically:</p>
+<pre><code>Gmail (unread) &gt;&gt; Collect Context &gt;&gt; AI Classifier (Chain of Thought)
+                                              ↓
+                                      Parse AI Output
+                                              ↓
+                                       Flatten Result
+                                    (working hours SLA)
+                                              ↓
+                                        Not spam?
+                                              ↓
+                          ┌───────────────────────────────┐
+                   Google Sheets Log              Slack: Notify Owner
+                   (15 fields)                    (#cx-tickets)
+
+─── SLA WATCHER (every 5 min) ──────────────────────────────────────
+
+Cron &gt;&gt; Working Hours Guard (09:00-22:00)
+                    ↓
+         Read Open Tickets (Sheets)
+                    ↓
+           SLA Breached? (deadline &lt; now)
+                    ↓
+      Compute Escalation Level (minutes_overdue)
+                    ↓
+            Switch by Level
+                    ↓
+    ┌───────────────┬───────────────┬───────────────┐
+    L0 (0-30 min)   L1 (30-60 min)  L2 (60+ min)
+  Slack DM owner  #cx-escalations  Email to owner</code></pre>
+<h3>Track 1 - Ticket Ingestion and Classification</h3>
+<p>Processes every incoming email automatically. AI classifies category, priority, owner, and SLA deadline using Chain of Thought reasoning. Logs to Google Sheets and notifies the right owner in Slack within seconds.</p>
+<h3>Track 2 - SLA Watcher</h3>
+<p>Runs every 5 minutes during working hours. Checks all open tickets for SLA breach. Fires a 3-level escalation chain based on how long the ticket has been overdue.</p>
+<hr>
+<h2>Process</h2>
+<h3>1. Prompt Design</h3>
+<ul><li>Full system prompt written for HUSH with 5 mandatory blocks: role, context, instructions, Chain of Thought, output format</li><li>5 ticket categories specific to premium bag e-commerce</li><li>Priority matrix P1-P4 with SLA minutes (10 / 30 / 120 / 1440)</li><li>OVERRIDE rules: legal keywords &gt;&gt; always P2; influencer + “urgent” &gt;&gt; always P4; explicit human request &gt;&gt; requires_human: true</li><li>Language auto-detection: AI responds in client’s language</li><li>Temperature 0.2 for consistent JSON output</li></ul>
+<h3>2. Priority System</h3>
+<div class="table-wrap"><table><tr><th scope="col">Priority</th><th scope="col">SLA</th><th scope="col">Category</th><th scope="col">Action</th></tr><tr><td>P1</td><td>10 min</td><td>product-info, payment-billing</td><td>Slack alert to #cx-tickets</td></tr><tr><td>P2</td><td>30 min</td><td>complaint-legal</td><td>Slack alert, routed to owner</td></tr><tr><td>P3</td><td>2 hours</td><td>order-shipping-returns</td><td>Slack alert to #cx-tickets</td></tr><tr><td>P4</td><td>24 hours</td><td>influencer, other</td><td>Slack alert, low urgency</td></tr><tr><td>Spam</td><td>-</td><td>spam</td><td>Filtered out, not logged</td></tr></table></div>
+<h3>3. Escalation Rules</h3>
+<div class="table-wrap"><table><tr><th scope="col">Level</th><th scope="col">When</th><th scope="col">To whom</th><th scope="col">Channel</th></tr><tr><td>L0 - reminder</td><td>+5 min after SLA breach</td><td>On-duty operator</td><td>Slack DM</td></tr><tr><td>L1 - team alert</td><td>+30 min after breach</td><td>Whole team</td><td>#cx-escalations channel</td></tr><tr><td>L2 - owner escalation</td><td>+60 min after breach</td><td>Owner</td><td>Email + subject line with ticket details</td></tr></table></div>
+<h3>4. n8n Workflow Architecture</h3>
+<div class="table-wrap"><table><tr><th scope="col">Workflow</th><th scope="col">Trigger</th><th scope="col">Function</th></tr><tr><td>Track 1 - Ticket Routing</td><td>Gmail Trigger (every 1 min)</td><td>Collect &gt;&gt; Classify &gt;&gt; Log &gt;&gt; Notify</td></tr><tr><td>Track 2 - SLA Watcher</td><td>Schedule Trigger (every 5 min)</td><td>Read &gt;&gt; Check &gt;&gt; Escalate</td></tr></table></div>
+<h3>5. Working Hours Logic</h3>
+<p>Two implementation points:</p>
+<p><strong>SLA deadline calculation (at ticket creation):</strong></p>
+<p>Ticket at 22:30 &gt;&gt; deadline starts at 09:00 next day + SLA minutes. Ticket at 07:00 &gt;&gt; starts at 09:00 same day. Ticket at 14:00 &gt;&gt; normal calculation.</p>
+<p><strong>SLA Watcher guard:</strong></p>
+<p>First node after cron checks <code>$now.hour &gt;= 9 &amp;&amp; $now.hour &lt; 22</code>. Outside working hours &gt;&gt; execution stops. No false breach alerts overnight.</p>
+<h3>6. Key Technical Decisions</h3>
+<div class="table-wrap"><table><tr><th scope="col">Problem</th><th scope="col">Cause</th><th scope="col">Fix</th></tr><tr><td>Flatten Result empty</td><td>Agent node returns AI output as plain string</td><td>Added Code node: <code>JSON.parse($input.item.json.output)</code></td></tr><tr><td>escalation_level always 0</td><td>Field referenced itself before being set</td><td>Duplicated the minutes calculation inline</td></tr><tr><td>DateTime.fromFormat() NaN</td><td>Millisecond format mismatch with Sheets ISO string</td><td>Switched to native <code>new Date().getTime()</code></td></tr><tr><td>Structured Output Parser conflict</td><td>Incompatible with Agent node type</td><td>Removed parser, replaced with Code node</td></tr></table></div>
+<hr>
+<h2>Results</h2>
+<div class="table-wrap"><table><tr><th scope="col">Metric</th><th scope="col">Before</th><th scope="col">After</th><th scope="col">Change</th></tr><tr><td>Ticket triage</td><td>100% manual</td><td>100% automated</td><td><strong>↓ 0 min/ticket</strong></td></tr><tr><td>Operator triage time</td><td>60-90 min/day</td><td>~10 min/day (review only)</td><td><strong>↓ 85%</strong></td></tr><tr><td>Time to classification</td><td>5-15 min (manual)</td><td>~8 seconds</td><td><strong>↓ 99%</strong></td></tr><tr><td>P1 identification</td><td>Inconsistent</td><td>100% in testing</td><td><strong>New</strong></td></tr><tr><td>SLA visibility</td><td>None</td><td>Real-time in Sheets</td><td><strong>New</strong></td></tr><tr><td>Escalation on breach</td><td>Never</td><td>Automatic 3-level</td><td><strong>New</strong></td></tr><tr><td>Misclassifications</td><td>N/A</td><td>0 out of 10 test tickets</td><td><strong>0%</strong></td></tr><tr><td>Multilingual support</td><td>Manual decision</td><td>Automatic detection</td><td><strong>New</strong></td></tr><tr><td>Special rule accuracy</td><td>N/A</td><td>100% (URGENT influencer &gt;&gt; P4 ✅)</td><td><strong>New</strong></td></tr></table></div>
+<p><strong>Estimated time saved:</strong> 60-90 min/day &gt;&gt; ~400 hours/year per operator</p>
+<p><strong>Scalability:</strong> system handles 50 or 500 tickets/day with zero additional classification effort</p>
+<hr>
+<h2>Tech Stack</h2>
+<ul><li><strong>n8n</strong> (self-hosted via Docker) - workflow automation, both tracks</li><li><strong>OpenAI GPT-4o-mini</strong> - ticket classification with Chain of Thought reasoning</li><li><strong>Gmail API</strong> - ticket ingestion trigger + L2 escalation email</li><li><strong>Google Sheets</strong> - ticket log, SLA tracking, status management</li><li><strong>Slack</strong> - new ticket notifications + 3-level escalation alerts</li><li><strong>JavaScript / Luxon</strong> - working hours SLA deadline calculation</li></ul>
+<hr>
+<h2>What Works</h2>
+<ul><li>Full end-to-end automation: email arrives &gt;&gt; classified &gt;&gt; logged &gt;&gt; notified in Slack</li><li>Working hours SLA - no false escalations outside 09:00-22:00</li><li>3-level escalation chain fires correctly based on minutes overdue</li><li>Spam filtered before logging - keeps Sheets clean and saves OpenAI budget</li><li>Chain of Thought reasoning visible in every Slack notification - operators understand why priority was assigned</li><li>Multilingual - Ukrainian test ticket classified and summarized correctly</li><li>Special rules hold - influencer “URGENT deadline today” stayed P4</li></ul>
+<hr>
+<h2>What Can Be Improved</h2>
+<ul><li><strong>Manual status update</strong> - operator must change <code>status</code> to <code>closed</code> in Sheets manually; a Slack button triggering automatic close would eliminate this</li><li><strong>Single channel input</strong> - prototype uses Gmail only; Phase 2 adds Instagram Direct, Telegram, Facebook, website form</li><li><strong>No duplicate guard</strong> - if same email is processed twice, it creates a duplicate Sheets row; add Gmail label <code>Ticketed</code> + filter <code>label:Ticketed</code> to prevent</li><li><strong>L1/L2 repeat alerts</strong> - SLA Watcher fires every 5 min; a breached ticket at L2 will send owner emails every 5 min until closed; add <code>escalation_sent</code> flag to Sheets to prevent repeat sends</li></ul>
+<hr>
+<h2>Development Plan</h2>
+<ol><li>Add Slack button on escalation message &gt;&gt; operator clicks to mark ticket closed &gt;&gt; n8n webhook updates Sheets <code>status</code> to <code>closed</code></li><li>Add Gmail label <code>Ticketed</code> + trigger filter to prevent duplicate processing</li><li>Add <code>escalation_sent</code> column to Sheets &gt;&gt; prevent repeat L2 emails on same ticket</li><li>Phase 2 channels: Instagram Direct, Telegram, Facebook, website form &gt;&gt; each gets a webhook trigger feeding the same classifier</li><li>Weekly SLA breach report &gt;&gt; cron every Monday &gt;&gt; reads Sheets &gt;&gt; AI finds patterns by category/hour &gt;&gt; posts to Slack</li></ol>
+<hr>
+<h2>Loom Screencast</h2>
+<p class="walkthrough"><a href="https://www.loom.com/share/2d4deb45550a4597a0e93debd733debd" target="_blank" rel="noopener noreferrer">Watch the walkthrough on Loom</a></p>
+<hr>
+<h2>Screenshots</h2>
+<ol><li>n8n canvas - Track 1</li></ol>
+<figure><img src="../cases/assets/ticket-router/Screenshot_2026-06-09_at_20.29.58.png" alt="" loading="lazy"></figure>
+<ol><li>n8n canvas - Track 2</li></ol>
+<figure><img src="../cases/assets/ticket-router/Screenshot_2026-06-09_at_20.32.33.png" alt="" loading="lazy"></figure>
+<ol><li>Slack #cx-tickets - P1 new ticket notification</li></ol>
+<figure><img src="../cases/assets/ticket-router/Screenshot_2026-06-09_at_20.38.56.png" alt="" loading="lazy"></figure>
+<ol><li>Slack - L1 escalation message</li></ol>
+<figure><img src="../cases/assets/ticket-router/Screenshot_2026-06-09_at_20.39.55.png" alt="" loading="lazy"></figure>
+<ol><li>Slack - L2 escalation triggered + Email sent</li></ol>
+<figure><img src="../cases/assets/ticket-router/Screenshot_2026-06-09_at_20.28.41.png" alt="" loading="lazy"></figure>
+<ol><li>Google Sheets - rows with all 15 fields</li></ol>
+<figure><img src="../cases/assets/ticket-router/Screenshot_2026-06-09_at_20.31.20.png" alt="" loading="lazy"></figure>
+<ol><li>AI Classifier output - reasoning field example</li></ol>
+<figure><img src="../cases/assets/ticket-router/Screenshot_2026-06-09_at_20.34.34.png" alt="" loading="lazy"></figure>
+<hr>
+<h2>GitHub Repository</h2>
+<p>🔗 <a href="https://github.com/vitaliiburorichnyi/hush-ticket-routing-sla" target="_blank" rel="noopener noreferrer">https://github.com/vitaliiburorichnyi/hush-ticket-routing-sla</a></p>
+  </div>
+
+  <div class="case-links"><a class="btn" href="https://app.notion.com/p/37a70072ce9280e3bc23c7cb463bfdcf" target="_blank" rel="noopener noreferrer">Read the original on Notion</a></div>
+</main>
+
+<script src="../case.js?v=imn4j0"></script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voice AI Agent for Retail - Vitalii Burorichnyi</title>
+<meta name="description" content="A voice agent that answers every inbound call instantly, identifies the caller, and updates delivery addresses in real time.">
+<link rel="icon" href="../avatar.png">
+<link rel="apple-touch-icon" href="../avatar.png">
+
+<!-- Same pre-paint theme script as the map, so moving between them never flashes. -->
+<script>
+  (function () {
+    var stored = null;
+    try { stored = localStorage.getItem("theme"); } catch (e) { /* blocked */ }
+    var theme = (stored === "light" || stored === "dark") ? stored
+      : (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>
+
+<link rel="stylesheet" href="../styles.css?v=6ruha1">
+<link rel="stylesheet" href="../case.css?v=btmvpw">
+</head>
+<body class="case-body">
+
+<header class="case-header">
+  <a class="case-back" href="../#voice-retail">
+    <img src="../avatar.png" alt="" width="36" height="36">
+    <span>Back to the map</span>
+  </a>
+  <button id="theme-toggle" class="icon-btn" type="button" aria-label="Switch to light theme">
+    <svg class="icon icon--sun" viewBox="0 0 24 24" width="18" height="18" fill="none"
+         stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.2 5.2l1.5 1.5M17.3 17.3l1.5 1.5M18.8 5.2l-1.5 1.5M6.7 17.3l-1.5 1.5"/>
+    </svg>
+    <svg class="icon icon--moon" viewBox="0 0 24 24" width="18" height="18" fill="none"
+         stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M20.1 14.3A8.2 8.2 0 0 1 9.7 3.9a8.6 8.6 0 1 0 10.4 10.4Z"/>
+    </svg>
+  </button>
+</header>
+
+<main class="case">
+  <p class="eyebrow">Case study</p>
+  <h1>Voice AI Agent for Retail</h1>
+  <p class="subtitle"><strong>Autonomous voice assistant that handles inbound customer calls - identifies callers, checks orders, updates addresses, logs every call automatically.</strong></p>
+
+  <div class="case-meta">
+    <span>Solo build</span>
+    <span>Happ.tools</span><span>n8n</span><span>SIP / Zadarma</span><span>Google Sheets</span><span>ngrok</span>
+  </div>
+
+  <div class="case-body-text">
+<blockquote></blockquote>
+<hr>
+<h2>Project Summary</h2>
+<div class="table-wrap"><table><tr><th scope="col"><strong>Client</strong></th><th scope="col">Clothing retail store (Boutique)</th></tr><tr><td><strong>Type</strong></td><td>Voice AI Automation</td></tr><tr><td><strong>Stack</strong></td><td>Happ.tools · n8n · Google Sheets · SIP</td></tr><tr><td><strong>Status</strong></td><td>✅ Live and tested</td></tr><tr><td><strong>GitHub</strong></td><td><a href="https://github.com/vitaliiburorichnyi/Voice-AI-Agent-for-Retail-Boutique" target="_blank" rel="noopener noreferrer">Voice-AI-Agent-for-Retail-Boutique</a></td></tr></table></div>
+<hr>
+<h2>The Problem</h2>
+<p>The store receives dozens of calls daily:</p>
+<ul><li>“What’s my order status?”</li><li>“Can I change my delivery address?”</li><li>“How much does shipping cost?”</li></ul>
+<p>One manager can’t handle all calls in time. Customers wait on hold or don’t get answers. The team spends hours on repetitive questions instead of complex tasks.</p>
+<hr>
+<h2>The Solution</h2>
+<p>A Voice AI Agent named <strong>Anika</strong> that:</p>
+<p>→ Picks up every inbound call instantly</p>
+<p>→ Identifies the customer by phone number</p>
+<p>→ Greets them by name with their order details</p>
+<p>→ Answers typical questions autonomously</p>
+<p>→ Updates delivery address in real time</p>
+<p>→ Logs a full call summary after every conversation</p>
+<hr>
+<h2>Architecture</h2>
+<pre><code>📞 Incoming Call (SIP/Zadarma)
+        ↓
+🎙️ Happ.tools - Voice Agent &quot;Anika&quot;
+        ↓
+⚡ n8n - Workflow Automation (3 webhooks)
+        ↓
+📊 Google Sheets - Orders + Call Log</code></pre>
+<h3>3 Automated Integrations</h3>
+<p><strong>Before the call - Init Tool</strong></p>
+<ul><li>Receives caller phone number</li><li>Looks up customer in Google Sheets</li><li>Returns: name, order ID, status, delivery address</li><li>Agent greets customer by name within seconds</li></ul>
+<p><strong>During the call - Change Address</strong></p>
+<ul><li>Customer says new address</li><li>n8n updates the row in Google Sheets instantly</li><li>Agent confirms the change</li></ul>
+<p><strong>After the call - Postcall</strong></p>
+<ul><li>Happ.tools sends full call data to n8n</li><li>Code node extracts customer name and order ID</li><li>New row appended to Call Log automatically</li></ul>
+<hr>
+<h2>Tech Stack</h2>
+<div class="table-wrap"><table><tr><th scope="col">Tool</th><th scope="col">Role</th></tr><tr><td><strong>Happ.tools</strong></td><td>Voice AI platform, SIP integration</td></tr><tr><td><strong>n8n</strong></td><td>Webhook automation, data processing</td></tr><tr><td><strong>Google Sheets</strong></td><td>Customer database + call log</td></tr><tr><td><strong>Zadarma</strong></td><td>SIP telephony</td></tr><tr><td><strong>ngrok</strong></td><td>Webhook tunneling (development)</td></tr></table></div>
+<hr>
+<h2>Test Results - 10 Scenarios</h2>
+<div class="table-wrap"><table><tr><th scope="col">#</th><th scope="col">Scenario</th><th scope="col">Result</th></tr><tr><td>1</td><td>Known customer asks order status</td><td>✅ Greeted by name, correct status given</td></tr><tr><td>2</td><td>Known customer changes address</td><td>✅ Old address confirmed, new address saved</td></tr><tr><td>3</td><td>Unknown number calls</td><td>✅ Generic greeting, no crash</td></tr><tr><td>4</td><td>Customer asks delivery cost</td><td>✅ Correct answer from Knowledge Base</td></tr><tr><td>5</td><td>Customer asks return policy</td><td>✅ Correct answer from Knowledge Base</td></tr><tr><td>6</td><td>Angry customer</td><td>✅ Calm response, human handoff offered</td></tr><tr><td>7</td><td>Out-of-scope question</td><td>✅ Redirected to manager</td></tr><tr><td>8</td><td>Order not found</td><td>✅ Informed customer, offered manager</td></tr><tr><td>9</td><td>Customer asks about sizes</td><td>✅ Correct answer from Knowledge Base</td></tr><tr><td>10</td><td>Normal call ends</td><td>✅ Postcall fired, Call Log updated</td></tr></table></div>
+<hr>
+<h2>Metrics</h2>
+<div class="table-wrap"><table><tr><th scope="col">Metric</th><th scope="col">Value</th></tr><tr><td>Call Success Rate</td><td><strong>100%</strong></td></tr><tr><td>Human Handoff Rate</td><td><strong>30%</strong> (edge cases only)</td></tr><tr><td>Knowledge Base Accuracy</td><td><strong>100%</strong></td></tr><tr><td>Postcall Logging Rate</td><td><strong>100%</strong></td></tr><tr><td>Avg Call Duration</td><td><strong>~60 sec</strong></td></tr><tr><td>Time saved per call</td><td><strong>~3-5 min</strong></td></tr></table></div>
+<hr>
+<h2>Key Challenges &amp; Solutions</h2>
+<h3>1. Phone number format mismatch</h3>
+<p><strong>Problem:</strong> Google Sheets drops <code>+</code> from phone numbers stored as numbers.</p>
+<p><strong>Solution:</strong> Strip <code>+</code> in n8n filter expression before lookup. Store phones as plain text.</p>
+<h3>2. Unknown caller crashing the agent</h3>
+<p><strong>Problem:</strong> When phone not in sheet, Google Sheets returns empty → n8n stops → agent freezes.</p>
+<p><strong>Solution:</strong> <code>Always Output Data</code> setting + IF node returns empty JSON fallback so agent always gets a valid response.</p>
+<h3>3. Variable injection syntax</h3>
+<p><strong>Problem:</strong> Initial <code>[customer_name]</code> syntax was read literally by the agent.</p>
+<p><strong>Solution:</strong> Happ.tools uses <code>{{variable}}</code> syntax. Updated all prompt references.</p>
+<h3>4. Init Tool loading delay</h3>
+<p><strong>Problem:</strong> 3-4 second silence at call start while webhook loads.</p>
+<p><strong>Solution:</strong> Added First Message “Один момент…” + increased silence timeout to 15 seconds.</p>
+<h3>5. Postcall field extraction</h3>
+<p><strong>Problem:</strong> Happ.tools sends call data in deeply nested JSON. LLM-generated fields were unreliable.</p>
+<p><strong>Solution:</strong> Built Code node in n8n using regex to extract order_id and customer_name from transcript summary.</p>
+<hr>
+<h2>Prompt Engineering - Before vs After</h2>
+<h3>Before</h3>
+<pre><code>&quot;Вітаємо в Boutique! Мене звати Аніка.
+Я бачу, що вам телефонує [customer_name]. Чим можу допомогти?&quot;</code></pre>
+<p>❌ Wrong variable syntax - agent said “[customer_name]” literally</p>
+<p>❌ No fallback for unknown callers</p>
+<p>❌ No postcall instructions</p>
+<h3>After</h3>
+<pre><code>If {{customer_name}} is available:
+&quot;Вітаємо в Boutique! Мене звати Аніка.
+З вами говорить {{customer_name}}? Ваше замовлення {{order_id}}
+має статус {{order_status}}. Чим можу допомогти?&quot;
+
+If {{customer_name}} is NOT available:
+&quot;Вітаємо в Boutique! Мене звати Аніка. Чим можу допомогти?&quot;</code></pre>
+<p>✅ Correct variable syntax</p>
+<p>✅ Fallback for unknown callers</p>
+<p>✅ Postcall instructions added</p>
+<p>✅ Language rules added</p>
+<hr>
+<h2>Business Impact</h2>
+<p><strong>Before automation:</strong></p>
+<ul><li>1 manager handles all calls</li><li>Average wait time: 2-5 minutes</li><li>Missed calls during peak hours</li><li>No call logging</li></ul>
+<p><strong>After automation:</strong></p>
+<ul><li>Agent picks up instantly, 24/7</li><li>70% of calls resolved without human</li><li>Every call logged automatically</li><li>Manager handles complex cases only</li></ul>
+<hr>
+<h2>Next Steps</h2>
+<ul class="todo"><li> Replace Google Sheets with KeyCRM API</li><li> Add SMS confirmation after address change</li><li> Outbound calls for order confirmations</li><li> Multilingual support (UA / EN)</li><li> Reduce Init Tool latency to under 1 second</li><li> Analytics dashboard on call outcomes</li></ul>
+<hr>
+<h2>Screenshots</h2>
+<figure><img src="../cases/assets/voice-retail/Screenshot_2026-05-21_at_10.21.51.png" alt="" loading="lazy"></figure>
+<figure><img src="../cases/assets/voice-retail/Screenshot_2026-05-21_at_10.22.12.png" alt="" loading="lazy"></figure>
+<figure><img src="../cases/assets/voice-retail/Screenshot_2026-05-21_at_10.23.58.png" alt="" loading="lazy"></figure>
+<figure><img src="../cases/assets/voice-retail/Screenshot_2026-05-21_at_10.24.07.png" alt="" loading="lazy"></figure>
+<figure><img src="../cases/assets/voice-retail/Screenshot_2026-05-21_at_10.24.14.png" alt="" loading="lazy"></figure>
+  </div>
+
+  <div class="case-links"><a class="btn" href="https://app.notion.com/p/36770072ce9280218033d3d5655d205e" target="_blank" rel="noopener noreferrer">Read the original on Notion</a><a class="btn" href="https://github.com/vitaliiburorichnyi/Voice-AI-Agent-for-Retail-Boutique" target="_blank" rel="noopener noreferrer">Code on GitHub</a></div>
+</main>
+
+<script src="../case.js?v=imn4j0"></script>
+</body>
+</html>

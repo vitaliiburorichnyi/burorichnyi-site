@@ -166,8 +166,11 @@ for (const sys of DATA.systems) {
   const meta = JSON.parse(Deno.readTextFileSync(SNAP + sys.id + ".meta.json"));
 
   /* Drift guard. The map's headline number has to still be in the source. */
-  const plain = md.replace(/\\/g, "").replace(/\s+/g, " ");
-  const claim = sys.result.replace(/\s+/g, " ");
+  /* En and em dashes are the same figure as a hyphen. Notion writes 2\u20134,
+     data.js writes 2-4, and the guard should not fire on the character. */
+  const dashes = (t) => t.replace(/[\u2010-\u2015\u2212]/g, "-");
+  const plain = dashes(md.replace(/\\/g, "").replace(/\s+/g, " "));
+  const claim = dashes(sys.result.replace(/\s+/g, " "));
   const firstClaim = claim.split(".")[0].trim();
   const loose = firstClaim.replace(/[~()%,]/g, "").split(/\s+/).filter((w) => /\d/.test(w));
   const missing = loose.filter((n) => !plain.replace(/[~()%,]/g, "").includes(n));
