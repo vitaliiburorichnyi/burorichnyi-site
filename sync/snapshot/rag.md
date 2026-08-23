@@ -68,6 +68,10 @@ The customer question is embedded and matched against the top 5 chunks by cosine
 ### Evaluation
 30 golden question-answer pairs — 21 answerable, 9 deliberately outside the knowledge base — run through the full pipeline and are judged by Claude against the **actual retrieved context**, not a summary of it, on three separate axes: grounded, correct, and escalated correctly.
 ---
+The workflow. Retrieval replaced the answer step inside the existing email support build, so the escalation and logging around it still run.
+![](cases/assets/rag/rag-01-workflow.png)
+The knowledge base in Postgres. Ten source documents split into heading-aware chunks, each row carrying its embedding and the metadata that lets an answer cite where it came from.
+![](cases/assets/rag/rag-02-knowledge-base.png)
 ## ⚙️ Engineering decisions
 ### 1. Heading-aware chunking, not fixed-size
 Policy documents have semantic boundaries. A "Refund timing" section split mid-sentence produces two chunks that are each individually misleading. Chunking on markdown headings at 2000 characters with 15% overlap keeps a policy intact.
@@ -94,6 +98,8 @@ Every request — question, retrieved chunk titles and scores, final answer, esc
 ### 5. Retrieved context is data, never instructions
 Both the retrieved chunks and the customer's own email are passed to the model as data. The system prompt is fixed and cannot be overridden by content inside a chunk or inside a customer message.
 ---
+One real retrieval, logged before anything was sent. The five nearest chunks with their cosine distances, lower being closer, and the source each answer was allowed to draw on.
+![](cases/assets/rag/rag-03-retrieval-log.png)
 ## 📊 Results
 <table header-row="true">
 <tr>
@@ -130,6 +136,10 @@ Both the retrieved chunks and the customer's own email are passed to the model a
 The full per-question table, the two documented edge cases, and the three-iteration methodology story are published in `eval_results.md` in the repository.
 **Worth reading in that file:** the eval process found three separate problems — a mislabeled golden question, a real model inference gap, and a bug in the judge design itself. All three are written up rather than quietly fixed. A drop in accuracy while groundedness held at 100% is arithmetically impossible if the judge is sound, and that contradiction is what exposed the judge bug.
 ---
+The golden set. Thirty questions, twenty-one answerable and nine deliberately not, with the expected behaviour recorded for each.
+![](cases/assets/rag/rag-04-golden-set.png)
+The judged run. Every answer checked for correctness, for grounding, and for whether an out-of-scope question was escalated rather than guessed at.
+![](cases/assets/rag/rag-05-judged-run.png)
 ## 🛠️ Tech Stack
 <table header-row="true">
 <tr>

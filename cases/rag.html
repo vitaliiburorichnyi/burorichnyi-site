@@ -87,6 +87,10 @@ EVAL (on demand)
 <h3>Evaluation</h3>
 <p>30 golden question-answer pairs - 21 answerable, 9 deliberately outside the knowledge base - run through the full pipeline and are judged by Claude against the <strong>actual retrieved context</strong>, not a summary of it, on three separate axes: grounded, correct, and escalated correctly.</p>
 <hr>
+<p>The workflow. Retrieval replaced the answer step inside the existing email support build, so the escalation and logging around it still run.</p>
+<figure><img src="../cases/assets/rag/rag-01-workflow.png" alt="" loading="lazy"></figure>
+<p>The knowledge base in Postgres. Ten source documents split into heading-aware chunks, each row carrying its embedding and the metadata that lets an answer cite where it came from.</p>
+<figure><img src="../cases/assets/rag/rag-02-knowledge-base.png" alt="" loading="lazy"></figure>
 <h2>Engineering decisions</h2>
 <h3>1. Heading-aware chunking, not fixed-size</h3>
 <p>Policy documents have semantic boundaries. A &quot;Refund timing&quot; section split mid-sentence produces two chunks that are each individually misleading. Chunking on markdown headings at 2000 characters with 15% overlap keeps a policy intact.</p>
@@ -100,11 +104,17 @@ EVAL (on demand)
 <h3>5. Retrieved context is data, never instructions</h3>
 <p>Both the retrieved chunks and the customer's own email are passed to the model as data. The system prompt is fixed and cannot be overridden by content inside a chunk or inside a customer message.</p>
 <hr>
+<p>One real retrieval, logged before anything was sent. The five nearest chunks with their cosine distances, lower being closer, and the source each answer was allowed to draw on.</p>
+<figure><img src="../cases/assets/rag/rag-03-retrieval-log.png" alt="" loading="lazy"></figure>
 <h2>Results</h2>
 <div class="table-wrap"><table><tr><th scope="col">Measure</th><th scope="col">Result</th><th scope="col">What it means</th></tr><tr><td>Answerable questions correct</td><td><strong>20 / 21 - 95%</strong></td><td>Answers match the knowledge base</td></tr><tr><td>Answers grounded in retrieved source</td><td><strong>21 / 21 - 100%</strong></td><td>Nothing invented beyond the retrieved context</td></tr><tr><td>Out-of-KB questions escalated</td><td><strong>9 / 9 - 100%</strong></td><td>The system knows what it does not know</td></tr><tr><td>Knowledge base updates</td><td>Edit the doc, save</td><td>No prompt editing, no manual re-index</td></tr><tr><td>Auditability</td><td>Every retrieval logged</td><td>Queryable in Postgres, not a black box</td></tr></table></div>
 <p>The full per-question table, the two documented edge cases, and the three-iteration methodology story are published in <code>eval_results.md</code> in the repository.</p>
 <p><strong>Worth reading in that file:</strong> the eval process found three separate problems - a mislabeled golden question, a real model inference gap, and a bug in the judge design itself. All three are written up rather than quietly fixed. A drop in accuracy while groundedness held at 100% is arithmetically impossible if the judge is sound, and that contradiction is what exposed the judge bug.</p>
 <hr>
+<p>The golden set. Thirty questions, twenty-one answerable and nine deliberately not, with the expected behaviour recorded for each.</p>
+<figure><img src="../cases/assets/rag/rag-04-golden-set.png" alt="" loading="lazy"></figure>
+<p>The judged run. Every answer checked for correctness, for grounding, and for whether an out-of-scope question was escalated rather than guessed at.</p>
+<figure><img src="../cases/assets/rag/rag-05-judged-run.png" alt="" loading="lazy"></figure>
 <h2>Tech Stack</h2>
 <div class="table-wrap"><table><tr><th scope="col">Layer</th><th scope="col">Choice</th><th scope="col">Why</th></tr><tr><td>Vector database</td><td>Supabase - Postgres + pgvector, HNSW, cosine</td><td>Data already in Postgres, plain SQL, self-hostable</td></tr><tr><td>Embeddings</td><td>OpenAI <code>text-embedding-3-small</code></td><td>1536 dimensions, cheap, standard</td></tr><tr><td>Generation and judge</td><td>Claude Sonnet 4.6</td><td>Already used elsewhere in this support system</td></tr><tr><td>Orchestration</td><td>n8n native LangChain nodes</td><td>Whole pipeline without a custom backend</td></tr><tr><td>Observability</td><td>Supabase <code>retrieval_logs</code>, <code>eval_results</code></td><td>Every request and eval run is queryable</td></tr></table></div>
 <hr>
