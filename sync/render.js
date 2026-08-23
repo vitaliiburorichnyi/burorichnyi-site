@@ -121,7 +121,8 @@ const POSTERS = {
   "zXLmw3Yeddc": "cases/assets/email-support/email-support-poster.jpg",
   "6PpsMNdCbCs": "cases/assets/voice-qualifier/voice-qualifier-poster.jpg",
   "5ECjXMcbi84": "cases/assets/enrollment/enrollment-poster.jpg",
-  "JahyTMW6J7A": "cases/assets/lead-funnel/lead-funnel-poster.jpg"
+  "JahyTMW6J7A": "cases/assets/lead-funnel/lead-funnel-poster.jpg",
+  "KaSNC54l7gI": "cases/assets/rag/rag-poster.jpg"
 };
 
 function loom(src) {

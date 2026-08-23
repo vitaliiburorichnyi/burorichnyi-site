@@ -193,6 +193,10 @@ The judged run. Every answer checked for correctness, for grounding, and for whe
 3. Per-tenant namespaces if this served multiple stores
 4. Nightly scheduled eval runs with alerting on pass-rate drift
 ---
+## 🎥 Walkthrough
+A four-minute tour: the knowledge base in Postgres, a real retrieval with its similarity scores, the escalation guardrail on an out-of-scope question, and the eval results.
+<video src="https://youtu.be/KaSNC54l7gI"></video>
+---
 ## 📁 GitHub Repository
 🔗 [https://github.com/vitaliiburorichnyi/rag-support-agent](https://github.com/vitaliiburorichnyi/rag-support-agent)
 Includes `schema.sql`, the three n8n workflow exports, the 10 knowledge base source documents, and the full eval results table.

@@ -127,6 +127,10 @@ EVAL (on demand)
 <h2>What I would do at 10× scale</h2>
 <ol><li>Re-ranking on top of the vector search</li><li>Hybrid keyword + vector search for exact-match terms like SKUs and order numbers</li><li>Per-tenant namespaces if this served multiple stores</li><li>Nightly scheduled eval runs with alerting on pass-rate drift</li></ol>
 <hr>
+<h2>Walkthrough</h2>
+<p>A four-minute tour: the knowledge base in Postgres, a real retrieval with its similarity scores, the escalation guardrail on an out-of-scope question, and the eval results.</p>
+<figure class="video-embed"><a class="video-facade" href="https://www.youtube.com/watch?v=KaSNC54l7gI" data-video="KaSNC54l7gI" target="_blank" rel="noopener noreferrer" aria-label="Play the walkthrough"><img src="../cases/assets/rag/rag-poster.jpg" alt="" loading="lazy"><span class="video-play" aria-hidden="true"></span></a></figure>
+<hr>
 <h2>GitHub Repository</h2>
 <p>🔗 <a href="https://github.com/vitaliiburorichnyi/rag-support-agent" target="_blank" rel="noopener noreferrer">https://github.com/vitaliiburorichnyi/rag-support-agent</a></p>
 <p>Includes <code>schema.sql</code>, the three n8n workflow exports, the 10 knowledge base source documents, and the full eval results table.</p>
