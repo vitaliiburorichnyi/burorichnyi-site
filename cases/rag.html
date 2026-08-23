@@ -111,8 +111,8 @@ EVAL (on demand)
 <p>The full per-question table, the two documented edge cases, and the three-iteration methodology story are published in <code>eval_results.md</code> in the repository.</p>
 <p><strong>Worth reading in that file:</strong> the eval process found three separate problems - a mislabeled golden question, a real model inference gap, and a bug in the judge design itself. All three are written up rather than quietly fixed. A drop in accuracy while groundedness held at 100% is arithmetically impossible if the judge is sound, and that contradiction is what exposed the judge bug.</p>
 <hr>
-<p>The golden set. Thirty questions, twenty-one answerable and nine deliberately not, with the expected behaviour recorded for each.</p>
-<figure><img src="../cases/assets/rag/rag-04-golden-set.png" alt="" loading="lazy"></figure>
+<p>The eval table with the out-of-scope questions sorted to the top. All nine sit at <code>is_answerable</code> false and <code>requires_human</code> true, handed off to a person instead of answered.</p>
+<figure><img src="../cases/assets/rag/rag-04-escalation.png" alt="" loading="lazy"></figure>
 <p>The judged run. Every answer checked for correctness, for grounding, and for whether an out-of-scope question was escalated rather than guessed at.</p>
 <figure><img src="../cases/assets/rag/rag-05-judged-run.png" alt="" loading="lazy"></figure>
 <h2>Tech Stack</h2>
