@@ -9,3 +9,8 @@
 
 # Vercel
 .vercel
+
+# The build spec is the private record. Section 2 carries the `provenance`
+# field (client / unpaid / hackathon / self-built) that the map deliberately
+# does not show, so it must never land in this public repo.
+BURORICHNYI_SITE_BUILD_SPEC.md

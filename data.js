@@ -475,7 +475,7 @@ window.PORTFOLIO_DATA = {
       result:
         "10-15 min of manual work removed per enrollment. A resent event produces zero output. Reading the response body caught three silent failures during the build.",
       notion: "https://app.notion.com/p/3bc70072ce9281f9a3cff87234576969",
-      github: null
+      github: "https://github.com/vitaliiburorichnyi/n8n-enrollment-automation"
     },
     {
       id: "lead-funnel",
