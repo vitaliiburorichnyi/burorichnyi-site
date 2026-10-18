@@ -35,10 +35,6 @@
     transition: background-color .2s, color .2s; }
   main { max-width: 560px; margin: 0 auto; padding: 24px 16px 56px; }
   .top { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-bottom: 18px; }
-  .lang { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 999px; padding: 3px; background: var(--lift); }
-  .lang button { border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 13px; font-weight: 600;
-    padding: 6px 12px; border-radius: 999px; cursor: pointer; }
-  .lang button[aria-pressed="true"] { background: var(--lift-hover); color: var(--text); }
   .icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; padding: 0;
     color: var(--muted); background: var(--lift); border: 1px solid var(--line-strong); border-radius: 50%; cursor: pointer;
     transition: background-color .2s, color .2s, border-color .2s; }
@@ -86,10 +82,6 @@
 <body>
 <main>
   <div class="top">
-    <div class="lang" role="group" aria-label="Language">
-      <button type="button" data-lang="en" aria-pressed="true">EN</button>
-      <button type="button" data-lang="ru" aria-pressed="false">RU</button>
-    </div>
     <button id="theme-toggle" class="icon-btn" type="button" aria-label="Switch to light theme">
       <svg class="icon icon--sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
         <circle cx="12" cy="12" r="4.2"/>
@@ -172,44 +164,17 @@
       call_failed: "The call could not be started. Please try again in a minute.", generic: "Something went wrong. Please try again.",
       toLight: "Switch to light theme", toDark: "Switch to dark theme",
     },
-    ru: {
-      title: "Вам позвонит Лео",
-      lead: "Лео: ИИ-агент исходящих продаж для SpeakNode, сделан на Vapi. Введите номер и код доступа, и Лео позвонит вам через несколько секунд. Играйте любой бизнес и возражайте сколько угодно.",
-      phone: "Ваш номер телефона", phoneHint: "(в международном формате)", name: "Ваше имя", optional: "(необязательно)",
-      business: "Ваш бизнес", businessHint: "(необязательно, одной строкой)", code: "Код доступа",
-      namePh: "Мария", businessPh: "Стоматология в Мадриде, в обед пропускаем звонки",
-      callMe: "Позвоните мне", talk: "Поговорить в браузере", endCall: "Завершить звонок",
-      liveTitle: "Звонок с Лео", tryTitle: "Что попробовать (говорите по-английски)",
-      tryLast: "Спросите, робот ли он, помолчите немного или скажите, что заняты.",
-      note: "Лео говорит по-английски. Звонок придёт с номера +44 20 4577 0842. На один номер доступно несколько звонков в день. Для разговора в браузере нужен доступ к микрофону.",
-      starting: "Запускаем звонок…", calling: "Лео уже звонит. Возьмите трубку и скажите hello.",
-      connecting: "Подключение…", connected: "Соединено. Поздоровайтесь с Лео.", ended: "Звонок завершён. Спасибо, что попробовали Лео.",
-      needCode: "Сначала введите код доступа.", webFail: "Звонок в браузере не удался. Проверьте доступ к микрофону и попробуйте ещё раз.",
-      listening: "Слушает…", speaking: "Лео говорит", you: "Вы: ", leo: "Лео: ",
-      wrong_code: "Неверный код доступа.", bad_phone: "Введите номер в международном формате, например +34 612 345 678.",
-      daily_cap: "Дневной лимит звонков исчерпан. Попробуйте завтра или поговорите в браузере.",
-      number_cap: "На этот номер сегодня уже звонили несколько раз. Попробуйте завтра или поговорите в браузере.",
-      call_failed: "Не удалось запустить звонок. Попробуйте через минуту.", generic: "Что-то пошло не так. Попробуйте ещё раз.",
-      toLight: "Включить светлую тему", toDark: "Включить тёмную тему",
-    },
   };
-  let lang = "en";
-  try { lang = localStorage.getItem("leo-lang") || ""; } catch (e) {}
-  if (!T[lang]) lang = (navigator.language || "").toLowerCase().startsWith("ru") ? "ru" : "en";
+  const lang = "en";
   const t = (k) => T[lang][k] || T.en[k] || k;
 
-  function applyLang(next) {
-    lang = next;
-    try { localStorage.setItem("leo-lang", lang); } catch (e) {}
-    document.documentElement.lang = lang;
+  function applyLang() {
     document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
     document.querySelectorAll("[data-i18n-ph]").forEach((el) => { el.placeholder = t(el.dataset.i18nPh); });
-    document.querySelectorAll(".lang button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
     if (inCall) $("webBtn").textContent = t("endCall");
     $("who").textContent = t(speaking ? "speaking" : "listening");
     applyTheme(document.documentElement.getAttribute("data-theme"));
   }
-  document.querySelectorAll(".lang button").forEach((b) => b.addEventListener("click", () => applyLang(b.dataset.lang)));
 
   // ---------- theme (same behaviour and key as the main site) ----------
   function applyTheme(theme) {
@@ -332,7 +297,7 @@
     } catch (err) { btn.disabled = false; status(err.message, "error"); }
   });
 
-  applyLang(lang);
+  applyLang();
 </script>
 </body>
 </html>
