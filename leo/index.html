@@ -43,10 +43,7 @@
   footer { color: var(--muted); font-size: 13px; margin-top: 24px; }
   #live { display: none; text-align: center; }
   #live.on { display: block; }
-  .orb-wrap { height: 150px; display: flex; align-items: center; justify-content: center; }
-  .orb { width: 84px; height: 84px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #7fd8be, var(--accent) 60%);
-    box-shadow: 0 0 0 0 rgba(31,111,92,.35); transition: transform .08s linear, box-shadow .2s; }
-  .orb.speaking { box-shadow: 0 0 0 14px rgba(79,184,154,.18), 0 0 0 28px rgba(79,184,154,.08); }
+  #wave { width: 100%; height: 130px; display: block; margin: 10px 0 4px; }
   .live-head { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--muted); }
   .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #e5484d; margin-right: 6px; animation: blink 1.2s infinite; }
   @keyframes blink { 50% { opacity: .3; } }
@@ -54,7 +51,7 @@
   #transcript { text-align: left; max-height: 220px; overflow-y: auto; font-size: 14px; border-top: 1px solid var(--line); padding-top: 10px; }
   #transcript p { margin: 6px 0; }
   #transcript b { color: var(--accent); }
-  @media (prefers-reduced-motion: reduce) { .orb { transition: none; } .dot { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .dot { animation: none; } }
 </style>
 </head>
 <body>
@@ -84,7 +81,7 @@
 
   <section class="card" id="live" aria-live="polite">
     <div class="live-head"><span><span class="dot"></span>Live call with Leo</span><span id="timer">0:00</span></div>
-    <div class="orb-wrap"><div class="orb" id="orb"></div></div>
+    <canvas id="wave" aria-hidden="true"></canvas>
     <div id="who">Connecting…</div>
     <div id="transcript"></div>
   </section>
@@ -129,19 +126,72 @@
   });
 
   let vapi = null, inCall = false, timerId = null, started = 0;
-  const live = $("live"), orb = $("orb"), who = $("who"), tr = $("transcript");
+  const live = $("live"), who = $("who"), tr = $("transcript"), canvas = $("wave");
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let leoLevel = 0, leoTarget = 0, youLevel = 0, mic = null, raf = 0, lastRole = "", lastP = null;
+
+  // Your voice level, from the microphone the call already uses (no new permission prompt).
+  async function startMic() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const ctx = new AudioContext(); const an = ctx.createAnalyser(); an.fftSize = 512;
+      ctx.createMediaStreamSource(stream).connect(an);
+      mic = { stream, ctx, an, buf: new Uint8Array(an.fftSize) };
+    } catch (e) { mic = null; }
+  }
+  function stopMic() { if (mic) { mic.stream.getTracks().forEach((t) => t.stop()); mic.ctx.close(); mic = null; } }
+  function micLevel() {
+    if (!mic) return 0;
+    mic.an.getByteTimeDomainData(mic.buf);
+    let sum = 0; for (const v of mic.buf) { const x = (v - 128) / 128; sum += x * x; }
+    return Math.min(1, Math.sqrt(sum / mic.buf.length) * 6);
+  }
+
+  function draw(t) {
+    const dpr = devicePixelRatio || 1, w = canvas.clientWidth, h = canvas.clientHeight;
+    if (canvas.width !== w * dpr) { canvas.width = w * dpr; canvas.height = h * dpr; }
+    const g = canvas.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+    leoLevel += (leoTarget - leoLevel) * 0.15;
+    youLevel += (micLevel() - youLevel) * 0.2;
+    const css = getComputedStyle(document.documentElement);
+    const layers = [
+      { level: youLevel, color: css.getPropertyValue("--muted").trim(), freq: 9, speed: 0.004 },
+      { level: leoLevel, color: css.getPropertyValue("--accent").trim(), freq: 6, speed: 0.003 },
+    ];
+    const mid = h / 2;
+    for (const L of layers) {
+      const amp = Math.max(1.5, L.level * h * 0.42);
+      for (let k = 0; k < 5; k++) {
+        g.beginPath(); g.strokeStyle = L.color; g.globalAlpha = 0.85 - k * 0.15; g.lineWidth = k === 0 ? 2 : 1;
+        for (let x = 0; x <= w; x += 2) {
+          const u = x / w, env = Math.pow(Math.sin(Math.PI * u), 2);
+          const y = mid + amp * env * Math.sin(u * L.freq * Math.PI + (still ? 0 : t * L.speed) + k * 0.55) * (1 - k * 0.12);
+          x ? g.lineTo(x, y) : g.moveTo(x, y);
+        }
+        g.stroke();
+      }
+    }
+    g.globalAlpha = 1;
+    raf = requestAnimationFrame(draw);
+  }
   function showLive(on) {
     live.classList.toggle("on", on);
     clearInterval(timerId);
     if (on) {
-      tr.innerHTML = ""; who.textContent = "Listening…"; started = Date.now();
+      tr.innerHTML = ""; lastRole = ""; who.textContent = "Listening…"; started = Date.now();
+      startMic(); cancelAnimationFrame(raf); raf = requestAnimationFrame(draw);
       timerId = setInterval(() => { const t = Math.floor((Date.now() - started) / 1000); $("timer").textContent = `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`; }, 500);
       live.scrollIntoView({ behavior: "smooth", block: "center" });
-    } else { orb.style.transform = "scale(1)"; orb.classList.remove("speaking"); }
+    } else { stopMic(); cancelAnimationFrame(raf); leoTarget = 0; }
   }
   function addLine(role, text) {
-    const p = document.createElement("p"); const b = document.createElement("b");
-    b.textContent = role === "assistant" ? "Leo: " : "You: "; p.append(b, text); tr.append(p); tr.scrollTop = tr.scrollHeight;
+    if (role === lastRole && lastP) { lastP.append(" " + text); }
+    else {
+      const p = document.createElement("p"); const b = document.createElement("b");
+      b.textContent = role === "assistant" ? "Leo: " : "You: "; p.append(b, text); tr.append(p);
+      lastRole = role; lastP = p;
+    }
+    tr.scrollTop = tr.scrollHeight;
   }
   $("webBtn").addEventListener("click", async () => {
     const btn = $("webBtn");
@@ -157,9 +207,9 @@
         vapi.on("call-start", () => { inCall = true; btn.disabled = false; btn.textContent = "End call"; status("Connected. Say hello to Leo.", "ok"); showLive(true); });
         vapi.on("call-end", () => { inCall = false; btn.disabled = false; btn.textContent = "Talk in browser"; status("Call ended. Thanks for trying Leo."); showLive(false); });
         vapi.on("error", (err) => { inCall = false; btn.disabled = false; btn.textContent = "Talk in browser"; console.error(err); status("The browser call failed. Check microphone access and try again.", "error"); showLive(false); });
-        vapi.on("speech-start", () => { who.textContent = "Leo is speaking"; orb.classList.add("speaking"); });
-        vapi.on("speech-end", () => { who.textContent = "Listening…"; orb.classList.remove("speaking"); });
-        vapi.on("volume-level", (v) => { orb.style.transform = `scale(${1 + Math.min(v, 1) * 0.6})`; });
+        vapi.on("speech-start", () => { who.textContent = "Leo is speaking"; });
+        vapi.on("speech-end", () => { who.textContent = "Listening…"; leoTarget = 0; });
+        vapi.on("volume-level", (v) => { leoTarget = Math.min(1, v * 1.6); });
         vapi.on("message", (m) => { if (m && m.type === "transcript" && m.transcriptType === "final") addLine(m.role, m.transcript); });
       }
       await vapi.start(conf.assistantId, conf.overrides);
