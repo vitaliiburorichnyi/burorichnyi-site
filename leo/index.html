@@ -74,7 +74,6 @@
   .btn.violet { background: var(--violet); color: var(--violet-text); }
   .btn:disabled { opacity: .6; cursor: default; }
   .small { font-size: 13px; color: var(--muted); margin-top: 10px; }
-  .option .small { min-height: 3.1em; }
   .status { min-height: 22px; margin: 10px 0 0; font-size: 14px; }
   .status.error { color: var(--error); }
   .status.ok { color: var(--ok); }
@@ -134,9 +133,9 @@
       <p>Enter your number and Leo calls you within seconds.</p>
       <label for="phone">Your phone number <span>(international)</span></label>
       <input id="phone" type="tel" placeholder="+34 612 345 678" inputmode="tel" required>
+      <p class="small">The call comes from +44 20 4577 0842. A few calls per number per day.</p>
       <div class="grow"></div>
       <button class="btn green" id="callBtn" type="submit">Call me</button>
-      <p class="small">The call comes from +44 20 4577 0842. A few calls per number per day.</p>
       <p class="status" id="callStatus" role="status" aria-live="polite"></p>
     </form>
 
@@ -144,9 +143,9 @@
       <h2><span class="badge" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></svg></span>Talk in browser</h2>
       <p>No phone needed. Talk to Leo right here.</p>
       <p>Needs microphone access.</p>
+      <p class="small">Best with headphones.</p>
       <div class="grow"></div>
       <button class="btn violet" id="webBtn" type="button">Start talking</button>
-      <p class="small">Best with headphones.</p>
       <p class="status" id="webStatus" role="status" aria-live="polite"></p>
     </div>
   </div>
