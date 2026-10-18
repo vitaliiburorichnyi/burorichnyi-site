@@ -2,15 +2,15 @@
 import { cfg, hooks, clean, codeOk, vapi, send } from "./_leo-lib.mjs";
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") return send(res, 405, { error: "Use POST." });
-  if (!cfg.privateKey) return send(res, 500, { error: "Server is not configured yet." });
+  if (req.method !== "POST") return send(res, 405, { code: "method", error: "Use POST." });
+  if (!cfg.privateKey) return send(res, 500, { code: "not_configured", error: "Server is not configured yet." });
 
   const { phone, name, business, code } = req.body || {};
-  if (!codeOk(code)) return send(res, 401, { error: "Wrong access code." });
+  if (!codeOk(code)) return send(res, 401, { code: "wrong_code", error: "Wrong access code." });
 
   const number = String(phone || "").replace(/[\s()\-.]/g, "");
   if (!/^\+[1-9]\d{7,14}$/.test(number)) {
-    return send(res, 400, { error: "Please enter the number in international format, for example +34 612 345 678." });
+    return send(res, 400, { code: "bad_phone", error: "Please enter the number in international format, for example +34 612 345 678." });
   }
 
   // Limits: counted from Vapi's own call list, so no database is needed.
@@ -18,11 +18,11 @@ export default async function handler(req, res) {
   const list = await vapi(`/call?phoneNumberId=${cfg.phoneNumberId}&createdAtGt=${encodeURIComponent(since)}&limit=100`);
   if (list.ok && Array.isArray(list.body)) {
     if (list.body.length >= cfg.dailyCap) {
-      return send(res, 429, { error: "Daily call limit reached. Please try again tomorrow, or use Talk in browser." });
+      return send(res, 429, { code: "daily_cap", error: "Daily call limit reached. Please try again tomorrow, or use Talk in browser." });
     }
     const mine = list.body.filter((c) => c.customer && c.customer.number === number).length;
     if (mine >= cfg.perNumberDaily) {
-      return send(res, 429, { error: `This number already got ${mine} calls today. Please try again tomorrow, or use Talk in browser.` });
+      return send(res, 429, { code: "number_cap", error: `This number already got ${mine} calls today. Please try again tomorrow, or use Talk in browser.` });
     }
   }
 
@@ -40,7 +40,7 @@ export default async function handler(req, res) {
   }
   if (!call.ok) {
     console.error("Vapi call failed", call.status, JSON.stringify(call.body).slice(0, 500));
-    return send(res, 502, { error: "The call could not be started. Please try again in a minute." });
+    return send(res, 502, { code: "call_failed", error: "The call could not be started. Please try again in a minute." });
   }
   return send(res, 200, { ok: true });
 }

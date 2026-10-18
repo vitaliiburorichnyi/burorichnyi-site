@@ -6,32 +6,60 @@
 <title>Leo Outbound Demo</title>
 <meta name="description" content="Get a call from Leo, an AI outbound sales agent built on Vapi for the SpeakNode test task.">
 <meta name="robots" content="noindex">
+<!-- Same theme key as the main site, so the choice carries over. Runs before paint. -->
+<script>
+  (function () {
+    var stored = null;
+    try { stored = localStorage.getItem("theme"); } catch (e) {}
+    var theme = (stored === "light" || stored === "dark") ? stored
+      : (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>
 <style>
   :root {
-    --bg: #f6f5f2; --card: #ffffff; --text: #1b1b1f; --muted: #62626b; --line: #e4e2dc;
-    --accent: #1f6f5c; --accent-text: #ffffff; --soft: #eaf3f0; --error: #b42318; --ok: #1f6f5c;
+    --bg: #0a0e17; --card: #0e1421; --field: #0a0e17; --text: #dde3ee; --muted: #8b94a8;
+    --placeholder: rgba(221, 227, 238, .30); --line: #1b2334; --line-strong: #27324a;
+    --accent: #4fb89a; --accent-text: #08130f; --soft: #10201c; --error: #ff8a7a; --ok: #6fd1b4;
+    --lift: rgba(255, 255, 255, .028); --lift-hover: rgba(255, 255, 255, .055);
   }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg: #121214; --card: #1b1b1f; --text: #ececf0; --muted: #a0a0aa; --line: #2c2c33;
-      --accent: #4fb89a; --accent-text: #0d1f1a; --soft: #1c2b27; --error: #ff8a7a; --ok: #6fd1b4; }
+  :root[data-theme="light"] {
+    --bg: #f5f7fa; --card: #ffffff; --field: #f5f7fa; --text: #151b27; --muted: #586274;
+    --placeholder: rgba(21, 27, 39, .36); --line: #e3e8f0; --line-strong: #c7d0de;
+    --accent: #1f6f5c; --accent-text: #ffffff; --soft: #eaf3f0; --error: #b42318; --ok: #1f6f5c;
+    --lift: rgba(16, 24, 40, .028); --lift-hover: rgba(16, 24, 40, .058);
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--text);
-    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-  main { max-width: 560px; margin: 0 auto; padding: 40px 16px 56px; }
+    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    transition: background-color .2s, color .2s; }
+  main { max-width: 560px; margin: 0 auto; padding: 24px 16px 56px; }
+  .top { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-bottom: 18px; }
+  .lang { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 999px; padding: 3px; background: var(--lift); }
+  .lang button { border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 13px; font-weight: 600;
+    padding: 6px 12px; border-radius: 999px; cursor: pointer; }
+  .lang button[aria-pressed="true"] { background: var(--lift-hover); color: var(--text); }
+  .icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; padding: 0;
+    color: var(--muted); background: var(--lift); border: 1px solid var(--line-strong); border-radius: 50%; cursor: pointer;
+    transition: background-color .2s, color .2s, border-color .2s; }
+  .icon-btn:hover { color: var(--text); background: var(--lift-hover); border-color: var(--accent); }
+  .icon--moon { display: none; }
+  :root[data-theme="light"] .icon--sun { display: none; }
+  :root[data-theme="light"] .icon--moon { display: block; }
   h1 { font-size: 28px; line-height: 1.2; margin: 0 0 8px; letter-spacing: -0.01em; }
   .lead { color: var(--muted); margin: 0 0 24px; }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; margin-bottom: 16px; }
   label { display: block; font-weight: 600; font-size: 14px; margin: 14px 0 6px; }
   label span { font-weight: 400; color: var(--muted); }
   input { width: 100%; font: inherit; padding: 11px 12px; border-radius: 10px; border: 1px solid var(--line);
-    background: var(--bg); color: var(--text); }
+    background: var(--field); color: var(--text); }
+  input::placeholder { color: var(--placeholder); opacity: 1; }
   input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
   .row { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
-  button { font: inherit; font-weight: 600; border-radius: 10px; padding: 11px 16px; cursor: pointer; border: 1px solid transparent; }
-  .primary { background: var(--accent); color: var(--accent-text); flex: 1 1 160px; }
-  .secondary { background: transparent; color: var(--text); border-color: var(--line); flex: 1 1 160px; }
-  button:disabled { opacity: .6; cursor: default; }
+  .btn { font: inherit; font-weight: 600; border-radius: 10px; padding: 11px 16px; cursor: pointer; border: 1px solid transparent; flex: 1 1 160px; }
+  .primary { background: var(--accent); color: var(--accent-text); }
+  .secondary { background: transparent; color: var(--text); border-color: var(--line-strong); }
+  .btn:disabled { opacity: .6; cursor: default; }
   #status { min-height: 24px; margin: 14px 0 0; font-size: 15px; }
   #status.error { color: var(--error); }
   #status.ok { color: var(--ok); }
@@ -41,14 +69,15 @@
   .muted { color: var(--muted); font-size: 14px; }
   .tip { background: var(--soft); border-color: transparent; }
   footer { color: var(--muted); font-size: 13px; margin-top: 24px; }
-  #live { display: none; text-align: center; }
+  footer a { color: inherit; }
+  #live { display: none; }
   #live.on { display: block; }
   #wave { width: 100%; height: 130px; display: block; margin: 10px 0 4px; }
   .live-head { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--muted); }
   .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #e5484d; margin-right: 6px; animation: blink 1.2s infinite; }
   @keyframes blink { 50% { opacity: .3; } }
-  #who { font-weight: 600; color: var(--text); margin: 4px 0 12px; }
-  #transcript { text-align: left; max-height: 220px; overflow-y: auto; font-size: 14px; border-top: 1px solid var(--line); padding-top: 10px; }
+  #who { font-weight: 600; text-align: center; margin: 4px 0 12px; }
+  #transcript { max-height: 220px; overflow-y: auto; font-size: 14px; border-top: 1px solid var(--line); padding-top: 10px; }
   #transcript p { margin: 6px 0; }
   #transcript b { color: var(--accent); }
   @media (prefers-reduced-motion: reduce) { .dot { animation: none; } }
@@ -56,81 +85,168 @@
 </head>
 <body>
 <main>
-  <h1>Get a call from Leo</h1>
-  <p class="lead">Leo is an AI outbound sales agent for SpeakNode, built on Vapi. Enter your number and the access code, and Leo calls you within seconds. Play any business you like and push back as much as you want.</p>
+  <div class="top">
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-lang="en" aria-pressed="true">EN</button>
+      <button type="button" data-lang="ru" aria-pressed="false">RU</button>
+    </div>
+    <button id="theme-toggle" class="icon-btn" type="button" aria-label="Switch to light theme">
+      <svg class="icon icon--sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="4.2"/>
+        <path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.2 5.2l1.5 1.5M17.3 17.3l1.5 1.5M18.8 5.2l-1.5 1.5M6.7 17.3l-1.5 1.5"/>
+      </svg>
+      <svg class="icon icon--moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M20.1 14.3A8.2 8.2 0 0 1 9.7 3.9a8.6 8.6 0 1 0 10.4 10.4Z"/>
+      </svg>
+    </button>
+  </div>
+
+  <h1 data-i18n="title">Get a call from Leo</h1>
+  <p class="lead" data-i18n="lead">Leo is an AI outbound sales agent for SpeakNode, built on Vapi. Enter your number and the access code, and Leo calls you within seconds. Play any business you like and push back as much as you want.</p>
 
   <form class="card" id="form" autocomplete="on">
-    <label for="phone">Your phone number <span>(international format)</span></label>
+    <label for="phone"><span data-i18n="phone" style="font-weight:600;color:var(--text)">Your phone number</span> <span data-i18n="phoneHint">(international format)</span></label>
     <input id="phone" name="phone" type="tel" placeholder="+34 612 345 678" inputmode="tel" required>
 
-    <label for="name">Your name <span>(optional)</span></label>
-    <input id="name" name="name" type="text" placeholder="Maria" maxlength="60">
+    <label for="name"><span data-i18n="name" style="font-weight:600;color:var(--text)">Your name</span> <span data-i18n="optional">(optional)</span></label>
+    <input id="name" name="name" type="text" data-i18n-ph="namePh" placeholder="Maria" maxlength="60">
 
-    <label for="business">Your business <span>(optional, one line)</span></label>
-    <input id="business" name="business" type="text" placeholder="Dental clinic in Madrid, we miss calls at lunch" maxlength="200">
+    <label for="business"><span data-i18n="business" style="font-weight:600;color:var(--text)">Your business</span> <span data-i18n="businessHint">(optional, one line)</span></label>
+    <input id="business" name="business" type="text" data-i18n-ph="businessPh" placeholder="Dental clinic in Madrid, we miss calls at lunch" maxlength="200">
 
-    <label for="code">Access code</label>
+    <label for="code" data-i18n="code">Access code</label>
     <input id="code" name="code" type="text" autocomplete="off" required>
 
     <div class="row">
-      <button class="primary" id="callBtn" type="submit">Call me</button>
-      <button class="secondary" id="webBtn" type="button">Talk in browser</button>
+      <button class="btn primary" id="callBtn" type="submit" data-i18n="callMe">Call me</button>
+      <button class="btn secondary" id="webBtn" type="button" data-i18n="talk">Talk in browser</button>
     </div>
     <p id="status" role="status" aria-live="polite"></p>
   </form>
 
   <section class="card" id="live" aria-live="polite">
-    <div class="live-head"><span><span class="dot"></span>Live call with Leo</span><span id="timer">0:00</span></div>
+    <div class="live-head"><span><span class="dot"></span><span data-i18n="liveTitle">Live call with Leo</span></span><span id="timer">0:00</span></div>
     <canvas id="wave" aria-hidden="true"></canvas>
-    <div id="who">Connecting…</div>
+    <div id="who"></div>
     <div id="transcript"></div>
   </section>
 
   <section class="card tip">
-    <h2>Things to try</h2>
+    <h2 data-i18n="tryTitle">Things to try</h2>
     <ul>
       <li>"We don't need it."</li>
       <li>"Robots annoy our customers."</li>
       <li>"It's expensive."</li>
       <li>"Just send it by email."</li>
-      <li>Ask whether he is a robot, go quiet for a while, or say you're busy.</li>
+      <li data-i18n="tryLast">Ask whether he is a robot, go quiet for a while, or say you're busy.</li>
     </ul>
   </section>
 
-  <p class="muted">The call may come from a UK number. Each number can get a few calls per day. Talk in browser needs microphone access.</p>
+  <p class="muted" data-i18n="note">Leo speaks English. The call may come from a UK number. Each number can get a few calls per day. Talk in browser needs microphone access.</p>
 
-  <footer>Built by <a href="/" style="color:inherit">Vitalii Burorichnyi</a> for the SpeakNode test task. Vapi, GPT-4.1, Deepgram, Zadarma.</footer>
+  <footer>Built by <a href="/">Vitalii Burorichnyi</a> for the SpeakNode test task. Vapi, GPT-4.1, Deepgram, Zadarma.</footer>
 </main>
 
 <script type="module">
   const $ = (id) => document.getElementById(id);
+
+  // ---------- language ----------
+  const T = {
+    en: {
+      title: "Get a call from Leo",
+      lead: "Leo is an AI outbound sales agent for SpeakNode, built on Vapi. Enter your number and the access code, and Leo calls you within seconds. Play any business you like and push back as much as you want.",
+      phone: "Your phone number", phoneHint: "(international format)", name: "Your name", optional: "(optional)",
+      business: "Your business", businessHint: "(optional, one line)", code: "Access code",
+      namePh: "Maria", businessPh: "Dental clinic in Madrid, we miss calls at lunch",
+      callMe: "Call me", talk: "Talk in browser", endCall: "End call",
+      liveTitle: "Live call with Leo", tryTitle: "Things to try",
+      tryLast: "Ask whether he is a robot, go quiet for a while, or say you're busy.",
+      note: "Leo speaks English. The call may come from a UK number. Each number can get a few calls per day. Talk in browser needs microphone access.",
+      starting: "Starting the call…", calling: "Leo is calling you now. Pick up and say hello.",
+      connecting: "Connecting…", connected: "Connected. Say hello to Leo.", ended: "Call ended. Thanks for trying Leo.",
+      needCode: "Please enter the access code first.", webFail: "The browser call failed. Check microphone access and try again.",
+      listening: "Listening…", speaking: "Leo is speaking", you: "You: ", leo: "Leo: ",
+      wrong_code: "Wrong access code.", bad_phone: "Please enter the number in international format, for example +34 612 345 678.",
+      daily_cap: "Daily call limit reached. Please try again tomorrow, or use Talk in browser.",
+      number_cap: "This number already got a few calls today. Please try again tomorrow, or use Talk in browser.",
+      call_failed: "The call could not be started. Please try again in a minute.", generic: "Something went wrong. Please try again.",
+      toLight: "Switch to light theme", toDark: "Switch to dark theme",
+    },
+    ru: {
+      title: "Вам позвонит Лео",
+      lead: "Лео: ИИ-агент исходящих продаж для SpeakNode, сделан на Vapi. Введите номер и код доступа, и Лео позвонит вам через несколько секунд. Играйте любой бизнес и возражайте сколько угодно.",
+      phone: "Ваш номер телефона", phoneHint: "(в международном формате)", name: "Ваше имя", optional: "(необязательно)",
+      business: "Ваш бизнес", businessHint: "(необязательно, одной строкой)", code: "Код доступа",
+      namePh: "Мария", businessPh: "Стоматология в Мадриде, в обед пропускаем звонки",
+      callMe: "Позвоните мне", talk: "Поговорить в браузере", endCall: "Завершить звонок",
+      liveTitle: "Звонок с Лео", tryTitle: "Что попробовать (говорите по-английски)",
+      tryLast: "Спросите, робот ли он, помолчите немного или скажите, что заняты.",
+      note: "Лео говорит по-английски. Звонок может прийти с британского номера. На один номер доступно несколько звонков в день. Для разговора в браузере нужен доступ к микрофону.",
+      starting: "Запускаем звонок…", calling: "Лео уже звонит. Возьмите трубку и скажите hello.",
+      connecting: "Подключение…", connected: "Соединено. Поздоровайтесь с Лео.", ended: "Звонок завершён. Спасибо, что попробовали Лео.",
+      needCode: "Сначала введите код доступа.", webFail: "Звонок в браузере не удался. Проверьте доступ к микрофону и попробуйте ещё раз.",
+      listening: "Слушает…", speaking: "Лео говорит", you: "Вы: ", leo: "Лео: ",
+      wrong_code: "Неверный код доступа.", bad_phone: "Введите номер в международном формате, например +34 612 345 678.",
+      daily_cap: "Дневной лимит звонков исчерпан. Попробуйте завтра или поговорите в браузере.",
+      number_cap: "На этот номер сегодня уже звонили несколько раз. Попробуйте завтра или поговорите в браузере.",
+      call_failed: "Не удалось запустить звонок. Попробуйте через минуту.", generic: "Что-то пошло не так. Попробуйте ещё раз.",
+      toLight: "Включить светлую тему", toDark: "Включить тёмную тему",
+    },
+  };
+  let lang = "en";
+  try { lang = localStorage.getItem("leo-lang") || ""; } catch (e) {}
+  if (!T[lang]) lang = (navigator.language || "").toLowerCase().startsWith("ru") ? "ru" : "en";
+  const t = (k) => T[lang][k] || T.en[k] || k;
+
+  function applyLang(next) {
+    lang = next;
+    try { localStorage.setItem("leo-lang", lang); } catch (e) {}
+    document.documentElement.lang = lang;
+    document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
+    document.querySelectorAll("[data-i18n-ph]").forEach((el) => { el.placeholder = t(el.dataset.i18nPh); });
+    document.querySelectorAll(".lang button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
+    if (inCall) $("webBtn").textContent = t("endCall");
+    $("who").textContent = t(speaking ? "speaking" : "listening");
+    applyTheme(document.documentElement.getAttribute("data-theme"));
+  }
+  document.querySelectorAll(".lang button").forEach((b) => b.addEventListener("click", () => applyLang(b.dataset.lang)));
+
+  // ---------- theme (same behaviour and key as the main site) ----------
+  function applyTheme(theme) {
+    document.documentElement.setAttribute("data-theme", theme);
+    $("theme-toggle").setAttribute("aria-label", t(theme === "dark" ? "toLight" : "toDark"));
+  }
+  $("theme-toggle").addEventListener("click", () => {
+    const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    applyTheme(next);
+    try { localStorage.setItem("theme", next); } catch (e) {}
+  });
+
+  // ---------- status + requests ----------
   const status = (text, kind = "") => { const s = $("status"); s.textContent = text; s.className = kind; };
   const fields = () => ({ phone: $("phone").value, name: $("name").value, business: $("business").value, code: $("code").value });
-
   async function post(path, data) {
     const res = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
     const body = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(body.error || "Something went wrong. Please try again.");
+    if (!res.ok) throw new Error(t(body.code) !== body.code ? t(body.code) : t("generic"));
     return body;
   }
 
   $("form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const btn = $("callBtn");
-    btn.disabled = true; status("Starting the call…");
-    try {
-      await post("/api/leo-call", fields());
-      status("Leo is calling you now. Pick up and say hello.", "ok");
-    } catch (err) { status(err.message, "error"); }
+    btn.disabled = true; status(t("starting"));
+    try { await post("/api/leo-call", fields()); status(t("calling"), "ok"); }
+    catch (err) { status(err.message, "error"); }
     finally { setTimeout(() => { btn.disabled = false; }, 15000); }
   });
 
-  let vapi = null, inCall = false, timerId = null, started = 0;
+  // ---------- live call panel ----------
+  let vapi = null, inCall = false, speaking = false, timerId = null, started = 0;
   const live = $("live"), who = $("who"), tr = $("transcript"), canvas = $("wave");
   const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
   let leoLevel = 0, leoTarget = 0, youLevel = 0, mic = null, raf = 0, lastRole = "", lastP = null;
 
-  // Your voice level, from the microphone the call already uses (no new permission prompt).
   async function startMic() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -139,15 +255,14 @@
       mic = { stream, ctx, an, buf: new Uint8Array(an.fftSize) };
     } catch (e) { mic = null; }
   }
-  function stopMic() { if (mic) { mic.stream.getTracks().forEach((t) => t.stop()); mic.ctx.close(); mic = null; } }
+  function stopMic() { if (mic) { mic.stream.getTracks().forEach((x) => x.stop()); mic.ctx.close(); mic = null; } }
   function micLevel() {
     if (!mic) return 0;
     mic.an.getByteTimeDomainData(mic.buf);
     let sum = 0; for (const v of mic.buf) { const x = (v - 128) / 128; sum += x * x; }
     return Math.min(1, Math.sqrt(sum / mic.buf.length) * 6);
   }
-
-  function draw(t) {
+  function draw(ts) {
     const dpr = devicePixelRatio || 1, w = canvas.clientWidth, h = canvas.clientHeight;
     if (canvas.width !== w * dpr) { canvas.width = w * dpr; canvas.height = h * dpr; }
     const g = canvas.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
@@ -158,14 +273,13 @@
       { level: youLevel, color: css.getPropertyValue("--muted").trim(), freq: 9, speed: 0.004 },
       { level: leoLevel, color: css.getPropertyValue("--accent").trim(), freq: 6, speed: 0.003 },
     ];
-    const mid = h / 2;
     for (const L of layers) {
       const amp = Math.max(1.5, L.level * h * 0.42);
       for (let k = 0; k < 5; k++) {
         g.beginPath(); g.strokeStyle = L.color; g.globalAlpha = 0.85 - k * 0.15; g.lineWidth = k === 0 ? 2 : 1;
         for (let x = 0; x <= w; x += 2) {
           const u = x / w, env = Math.pow(Math.sin(Math.PI * u), 2);
-          const y = mid + amp * env * Math.sin(u * L.freq * Math.PI + (still ? 0 : t * L.speed) + k * 0.55) * (1 - k * 0.12);
+          const y = h / 2 + amp * env * Math.sin(u * L.freq * Math.PI + (still ? 0 : ts * L.speed) + k * 0.55) * (1 - k * 0.12);
           x ? g.lineTo(x, y) : g.moveTo(x, y);
         }
         g.stroke();
@@ -178,9 +292,9 @@
     live.classList.toggle("on", on);
     clearInterval(timerId);
     if (on) {
-      tr.innerHTML = ""; lastRole = ""; who.textContent = "Listening…"; started = Date.now();
+      tr.innerHTML = ""; lastRole = ""; speaking = false; who.textContent = t("listening"); started = Date.now();
+      timerId = setInterval(() => { const s = Math.floor((Date.now() - started) / 1000); $("timer").textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; }, 500);
       startMic(); cancelAnimationFrame(raf); raf = requestAnimationFrame(draw);
-      timerId = setInterval(() => { const t = Math.floor((Date.now() - started) / 1000); $("timer").textContent = `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`; }, 500);
       live.scrollIntoView({ behavior: "smooth", block: "center" });
     } else { stopMic(); cancelAnimationFrame(raf); leoTarget = 0; }
   }
@@ -188,33 +302,37 @@
     if (role === lastRole && lastP) { lastP.append(" " + text); }
     else {
       const p = document.createElement("p"); const b = document.createElement("b");
-      b.textContent = role === "assistant" ? "Leo: " : "You: "; p.append(b, text); tr.append(p);
+      b.textContent = role === "assistant" ? t("leo") : t("you"); p.append(b, text); tr.append(p);
       lastRole = role; lastP = p;
     }
     tr.scrollTop = tr.scrollHeight;
   }
+
   $("webBtn").addEventListener("click", async () => {
     const btn = $("webBtn");
     if (inCall && vapi) { vapi.stop(); return; }
     const f = fields();
-    if (!f.code.trim()) { status("Please enter the access code first.", "error"); return; }
-    btn.disabled = true; status("Connecting…");
+    if (!f.code.trim()) { status(t("needCode"), "error"); return; }
+    btn.disabled = true; status(t("connecting"));
     try {
       const conf = await post("/api/leo-web", { code: f.code, name: f.name, business: f.business });
       if (!vapi) {
         const { default: Vapi } = await import("https://esm.sh/@vapi-ai/web@2.7.1");
         vapi = new Vapi(conf.publicKey);
-        vapi.on("call-start", () => { inCall = true; btn.disabled = false; btn.textContent = "End call"; status("Connected. Say hello to Leo.", "ok"); showLive(true); });
-        vapi.on("call-end", () => { inCall = false; btn.disabled = false; btn.textContent = "Talk in browser"; status("Call ended. Thanks for trying Leo."); showLive(false); });
-        vapi.on("error", (err) => { inCall = false; btn.disabled = false; btn.textContent = "Talk in browser"; console.error(err); status("The browser call failed. Check microphone access and try again.", "error"); showLive(false); });
-        vapi.on("speech-start", () => { who.textContent = "Leo is speaking"; });
-        vapi.on("speech-end", () => { who.textContent = "Listening…"; leoTarget = 0; });
+        const reset = () => { inCall = false; btn.disabled = false; btn.textContent = t("talk"); showLive(false); };
+        vapi.on("call-start", () => { inCall = true; btn.disabled = false; btn.textContent = t("endCall"); status(t("connected"), "ok"); showLive(true); });
+        vapi.on("call-end", () => { reset(); status(t("ended")); });
+        vapi.on("error", (err) => { console.error(err); reset(); status(t("webFail"), "error"); });
+        vapi.on("speech-start", () => { speaking = true; who.textContent = t("speaking"); });
+        vapi.on("speech-end", () => { speaking = false; who.textContent = t("listening"); leoTarget = 0; });
         vapi.on("volume-level", (v) => { leoTarget = Math.min(1, v * 1.6); });
         vapi.on("message", (m) => { if (m && m.type === "transcript" && m.transcriptType === "final") addLine(m.role, m.transcript); });
       }
       await vapi.start(conf.assistantId, conf.overrides);
     } catch (err) { btn.disabled = false; status(err.message, "error"); }
   });
+
+  applyLang(lang);
 </script>
 </body>
 </html>
