@@ -6,7 +6,6 @@
 <title>Leo Outbound Demo</title>
 <meta name="description" content="Get a call from Leo, an AI outbound sales agent built on Vapi for the SpeakNode test task.">
 <meta name="robots" content="noindex">
-<!-- Same theme key as the main site, so the choice carries over. Runs before paint. -->
 <script>
   (function () {
     var stored = null;
@@ -20,53 +19,71 @@
   :root {
     --bg: #0a0e17; --card: #0e1421; --field: #0a0e17; --text: #dde3ee; --muted: #8b94a8;
     --placeholder: rgba(221, 227, 238, .30); --line: #1b2334; --line-strong: #27324a;
-    --accent: #4fb89a; --accent-text: #08130f; --soft: #10201c; --error: #ff8a7a; --ok: #6fd1b4;
+    --accent: #4fb89a; --accent-text: #08130f; --accent-soft: rgba(79, 184, 154, .10);
+    --violet: #9d8cf7; --violet-text: #120d2a; --violet-soft: rgba(157, 140, 247, .10);
+    --soft: #10201c; --error: #ff8a7a; --ok: #6fd1b4;
     --lift: rgba(255, 255, 255, .028); --lift-hover: rgba(255, 255, 255, .055);
   }
   :root[data-theme="light"] {
     --bg: #f5f7fa; --card: #ffffff; --field: #f5f7fa; --text: #151b27; --muted: #586274;
     --placeholder: rgba(21, 27, 39, .36); --line: #e3e8f0; --line-strong: #c7d0de;
-    --accent: #1f6f5c; --accent-text: #ffffff; --soft: #eaf3f0; --error: #b42318; --ok: #1f6f5c;
+    --accent: #1f6f5c; --accent-text: #ffffff; --accent-soft: rgba(31, 111, 92, .07);
+    --violet: #6a55d6; --violet-text: #ffffff; --violet-soft: rgba(106, 85, 214, .07);
+    --soft: #eaf3f0; --error: #b42318; --ok: #1f6f5c;
     --lift: rgba(16, 24, 40, .028); --lift-hover: rgba(16, 24, 40, .058);
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--text);
-    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    transition: background-color .2s, color .2s; }
-  main { max-width: 560px; margin: 0 auto; padding: 24px 16px 56px; }
-  .top { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-bottom: 18px; }
+    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 56px; }
+  .top { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 18px; }
+  .top a { color: var(--muted); font-size: 14px; text-decoration: none; }
+  .top a:hover { color: var(--text); }
   .icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; padding: 0;
-    color: var(--muted); background: var(--lift); border: 1px solid var(--line-strong); border-radius: 50%; cursor: pointer;
-    transition: background-color .2s, color .2s, border-color .2s; }
+    color: var(--muted); background: var(--lift); border: 1px solid var(--line-strong); border-radius: 50%; cursor: pointer; }
   .icon-btn:hover { color: var(--text); background: var(--lift-hover); border-color: var(--accent); }
   .icon--moon { display: none; }
   :root[data-theme="light"] .icon--sun { display: none; }
   :root[data-theme="light"] .icon--moon { display: block; }
-  h1 { font-size: 28px; line-height: 1.2; margin: 0 0 8px; letter-spacing: -0.01em; }
-  .lead { color: var(--muted); margin: 0 0 24px; }
+  h1 { font-size: clamp(28px, 4vw, 34px); line-height: 1.2; margin: 0 0 8px; letter-spacing: -0.01em; }
+  .lead { color: var(--muted); margin: 0 0 10px; font-size: 17px; }
+  .results-link { display: inline-block; font-size: 15px; font-weight: 600; color: var(--accent); text-decoration: none; margin-bottom: 24px; }
+  .results-link:hover { text-decoration: underline; }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; margin-bottom: 16px; }
+  .step { font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px; }
   label { display: block; font-weight: 600; font-size: 14px; margin: 14px 0 6px; }
   label span { font-weight: 400; color: var(--muted); }
   input { width: 100%; font: inherit; padding: 11px 12px; border-radius: 10px; border: 1px solid var(--line);
     background: var(--field); color: var(--text); }
   input::placeholder { color: var(--placeholder); opacity: 1; }
   input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
-  .row { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
-  .btn { font: inherit; font-weight: 600; border-radius: 10px; padding: 11px 16px; cursor: pointer; border: 1px solid transparent; flex: 1 1 160px; }
-  .primary { background: var(--accent); color: var(--accent-text); }
-  .secondary { background: transparent; color: var(--text); border-color: var(--line-strong); }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+  .options { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  @media (max-width: 640px) { .two, .options { grid-template-columns: 1fr; } }
+  .option { border-radius: 14px; padding: 20px; border: 1px solid var(--line); display: flex; flex-direction: column; }
+  .option.phone { background: linear-gradient(var(--accent-soft), var(--accent-soft)), var(--card); border-top: 3px solid var(--accent); }
+  .option.web { background: linear-gradient(var(--violet-soft), var(--violet-soft)), var(--card); border-top: 3px solid var(--violet); }
+  .option h2 { display: flex; align-items: center; gap: 10px; font-size: 19px; margin: 0 0 6px; }
+  .badge { display: inline-flex; width: 34px; height: 34px; border-radius: 10px; align-items: center; justify-content: center; }
+  .phone .badge { background: var(--accent); color: var(--accent-text); }
+  .web .badge { background: var(--violet); color: var(--violet-text); }
+  .option p { margin: 0 0 4px; color: var(--muted); font-size: 15px; }
+  .option .grow { flex: 1; }
+  .btn { width: 100%; font: inherit; font-weight: 600; border-radius: 10px; padding: 12px 16px; cursor: pointer; border: 1px solid transparent; margin-top: 16px; }
+  .btn.green { background: var(--accent); color: var(--accent-text); }
+  .btn.violet { background: var(--violet); color: var(--violet-text); }
   .btn:disabled { opacity: .6; cursor: default; }
-  #status { min-height: 24px; margin: 14px 0 0; font-size: 15px; }
-  #status.error { color: var(--error); }
-  #status.ok { color: var(--ok); }
-  h2 { font-size: 17px; margin: 0 0 10px; }
+  .small { font-size: 13px; color: var(--muted); margin-top: 10px; }
+  .status { min-height: 22px; margin: 10px 0 0; font-size: 14px; }
+  .status.error { color: var(--error); }
+  .status.ok { color: var(--ok); }
+  h3 { font-size: 17px; margin: 0 0 10px; }
   ul { margin: 0; padding-left: 20px; }
   li { margin: 4px 0; }
-  .muted { color: var(--muted); font-size: 14px; }
   .tip { background: var(--soft); border-color: transparent; }
   footer { color: var(--muted); font-size: 13px; margin-top: 24px; }
   footer a { color: inherit; }
-  #live { display: none; }
+  #live { display: none; border-top: 3px solid var(--violet); }
   #live.on { display: block; }
   #wave { width: 100%; height: 130px; display: block; margin: 10px 0 4px; }
   .live-head { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--muted); }
@@ -75,138 +92,129 @@
   #who { font-weight: 600; text-align: center; margin: 4px 0 12px; }
   #transcript { max-height: 220px; overflow-y: auto; font-size: 14px; border-top: 1px solid var(--line); padding-top: 10px; }
   #transcript p { margin: 6px 0; }
-  #transcript b { color: var(--accent); }
+  #transcript b { color: var(--violet); }
   @media (prefers-reduced-motion: reduce) { .dot { animation: none; } }
 </style>
 </head>
 <body>
 <main>
   <div class="top">
-    <button id="theme-toggle" class="icon-btn" type="button" aria-label="Switch to light theme">
-      <svg class="icon icon--sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-        <circle cx="12" cy="12" r="4.2"/>
-        <path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.2 5.2l1.5 1.5M17.3 17.3l1.5 1.5M18.8 5.2l-1.5 1.5M6.7 17.3l-1.5 1.5"/>
-      </svg>
-      <svg class="icon icon--moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M20.1 14.3A8.2 8.2 0 0 1 9.7 3.9a8.6 8.6 0 1 0 10.4 10.4Z"/>
-      </svg>
+    <a href="/">Vitalii Burorichnyi</a>
+    <button id="theme-toggle" class="icon-btn" type="button" aria-label="Switch theme">
+      <svg class="icon icon--sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.2 5.2l1.5 1.5M17.3 17.3l1.5 1.5M18.8 5.2l-1.5 1.5M6.7 17.3l-1.5 1.5"/></svg>
+      <svg class="icon icon--moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.1 14.3A8.2 8.2 0 0 1 9.7 3.9a8.6 8.6 0 1 0 10.4 10.4Z"/></svg>
     </button>
   </div>
 
-  <h1 data-i18n="title">Get a call from Leo</h1>
-  <p class="lead" data-i18n="lead">Leo is an AI outbound sales agent for SpeakNode, built on Vapi. Enter your number and the access code, and Leo calls you within seconds. Play any business you like and push back as much as you want.</p>
+  <h1>Get a call from Leo</h1>
+  <p class="lead">Leo is an AI outbound sales agent for SpeakNode. Play any business you like and push back as much as you want.</p>
+  <a class="results-link" href="/leo/results">See the recorded calls, the prompt and how I debugged it →</a>
 
-  <form class="card" id="form" autocomplete="on">
-    <label for="phone"><span data-i18n="phone" style="font-weight:600;color:var(--text)">Your phone number</span> <span data-i18n="phoneHint">(international format)</span></label>
-    <input id="phone" name="phone" type="tel" placeholder="+34 612 345 678" inputmode="tel" required>
-
-    <label for="name"><span data-i18n="name" style="font-weight:600;color:var(--text)">Your name</span> <span data-i18n="optional">(optional)</span></label>
-    <input id="name" name="name" type="text" data-i18n-ph="namePh" placeholder="Maria" maxlength="60">
-
-    <label for="business"><span data-i18n="business" style="font-weight:600;color:var(--text)">Your business</span> <span data-i18n="businessHint">(optional, one line)</span></label>
-    <input id="business" name="business" type="text" data-i18n-ph="businessPh" placeholder="Dental clinic in Madrid, we miss calls at lunch" maxlength="200">
-
-    <label for="code" data-i18n="code">Access code</label>
-    <input id="code" name="code" type="text" autocomplete="off" required>
-
-    <div class="row">
-      <button class="btn primary" id="callBtn" type="submit" data-i18n="callMe">Call me</button>
-      <button class="btn secondary" id="webBtn" type="button" data-i18n="talk">Talk in browser</button>
+  <section class="card">
+    <p class="step">Step 1 · About you</p>
+    <label for="code">Access code</label>
+    <input id="code" type="text" autocomplete="off" required>
+    <div class="two">
+      <div>
+        <label for="name">Your name <span>(optional)</span></label>
+        <input id="name" type="text" placeholder="Maria" maxlength="60">
+      </div>
+      <div>
+        <label for="business">Your business <span>(optional)</span></label>
+        <input id="business" type="text" placeholder="Dental clinic in Madrid" maxlength="200">
+      </div>
     </div>
-    <p id="status" role="status" aria-live="polite"></p>
-  </form>
+  </section>
+
+  <p class="step" style="margin: 4px 0 10px">Step 2 · Choose how to talk</p>
+  <div class="options">
+    <form class="option phone" id="form">
+      <h2><span class="badge" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></span>Call me</h2>
+      <p>Enter your number and Leo calls you within seconds.</p>
+      <label for="phone">Your phone number <span>(international)</span></label>
+      <input id="phone" type="tel" placeholder="+34 612 345 678" inputmode="tel" required>
+      <div class="grow"></div>
+      <button class="btn green" id="callBtn" type="submit">Call me</button>
+      <p class="small">The call comes from +44 20 4577 0842. A few calls per number per day.</p>
+      <p class="status" id="callStatus" role="status" aria-live="polite"></p>
+    </form>
+
+    <div class="option web">
+      <h2><span class="badge" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></svg></span>Talk in browser</h2>
+      <p>No phone needed. Talk to Leo right here.</p>
+      <p>Needs microphone access.</p>
+      <div class="grow"></div>
+      <button class="btn violet" id="webBtn" type="button">Start talking</button>
+      <p class="small">Best with headphones.</p>
+      <p class="status" id="webStatus" role="status" aria-live="polite"></p>
+    </div>
+  </div>
 
   <section class="card" id="live" aria-live="polite">
-    <div class="live-head"><span><span class="dot"></span><span data-i18n="liveTitle">Live call with Leo</span></span><span id="timer">0:00</span></div>
+    <div class="live-head"><span><span class="dot"></span>Live call with Leo</span><span id="timer">0:00</span></div>
     <canvas id="wave" aria-hidden="true"></canvas>
     <div id="who"></div>
     <div id="transcript"></div>
   </section>
 
   <section class="card tip">
-    <h2 data-i18n="tryTitle">Things to try</h2>
+    <h3>Things to try</h3>
     <ul>
       <li>"We don't need it."</li>
       <li>"Robots annoy our customers."</li>
       <li>"It's expensive."</li>
       <li>"Just send it by email."</li>
-      <li data-i18n="tryLast">Ask whether he is a robot, go quiet for a while, or say you're busy.</li>
+      <li>Ask whether he is a robot, go quiet for a while, or say you're busy.</li>
     </ul>
+    <p class="small">Leo speaks English.</p>
   </section>
 
-  <p class="muted" data-i18n="note">Leo speaks English. The call comes from +44 20 4577 0842. Each number can get a few calls per day. Talk in browser needs microphone access.</p>
-
-  <footer>Built by <a href="/">Vitalii Burorichnyi</a> for the SpeakNode test task. Vapi, GPT-4.1, Deepgram, Zadarma.</footer>
+  <footer>Built by <a href="/">Vitalii Burorichnyi</a> for the SpeakNode test task. Vapi, GPT-4.1, Deepgram, Zadarma. · <a href="/leo/results">Results</a></footer>
 </main>
 
 <script type="module">
   const $ = (id) => document.getElementById(id);
-
-  // ---------- language ----------
-  const T = {
-    en: {
-      title: "Get a call from Leo",
-      lead: "Leo is an AI outbound sales agent for SpeakNode, built on Vapi. Enter your number and the access code, and Leo calls you within seconds. Play any business you like and push back as much as you want.",
-      phone: "Your phone number", phoneHint: "(international format)", name: "Your name", optional: "(optional)",
-      business: "Your business", businessHint: "(optional, one line)", code: "Access code",
-      namePh: "Maria", businessPh: "Dental clinic in Madrid, we miss calls at lunch",
-      callMe: "Call me", talk: "Talk in browser", endCall: "End call",
-      liveTitle: "Live call with Leo", tryTitle: "Things to try",
-      tryLast: "Ask whether he is a robot, go quiet for a while, or say you're busy.",
-      note: "Leo speaks English. The call comes from +44 20 4577 0842. Each number can get a few calls per day. Talk in browser needs microphone access.",
-      starting: "Starting the call…", calling: "Leo is calling you now. Pick up and say hello.",
-      connecting: "Connecting…", connected: "Connected. Say hello to Leo.", ended: "Call ended. Thanks for trying Leo.",
-      needCode: "Please enter the access code first.", webFail: "The browser call failed. Check microphone access and try again.",
-      listening: "Listening…", speaking: "Leo is speaking", you: "You: ", leo: "Leo: ",
-      wrong_code: "Wrong access code.", bad_phone: "Please enter the number in international format, for example +34 612 345 678.",
-      daily_cap: "Daily call limit reached. Please try again tomorrow, or use Talk in browser.",
-      number_cap: "This number already got a few calls today. Please try again tomorrow, or use Talk in browser.",
-      call_failed: "The call could not be started. Please try again in a minute.", generic: "Something went wrong. Please try again.",
-      toLight: "Switch to light theme", toDark: "Switch to dark theme",
-    },
+  const TEXT = {
+    starting: "Starting the call…", calling: "Leo is calling you now. Pick up and say hello.",
+    connecting: "Connecting…", connected: "Connected. Say hello to Leo.", ended: "Call ended. Thanks for trying Leo.",
+    needCode: "Please enter the access code in step 1.", webFail: "The browser call failed. Check microphone access and try again.",
+    listening: "Listening…", speaking: "Leo is speaking", you: "You: ", leo: "Leo: ",
+    wrong_code: "Wrong access code.", bad_phone: "Please enter the number in international format, for example +34 612 345 678.",
+    daily_cap: "Daily call limit reached. Please try again tomorrow, or talk in the browser.",
+    number_cap: "This number already got a few calls today. Please try again tomorrow, or talk in the browser.",
+    call_failed: "The call could not be started. Please try again in a minute.", generic: "Something went wrong. Please try again.",
   };
-  const lang = "en";
-  const t = (k) => T[lang][k] || T.en[k] || k;
+  const t = (k) => TEXT[k] || TEXT.generic;
 
-  function applyLang() {
-    document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
-    document.querySelectorAll("[data-i18n-ph]").forEach((el) => { el.placeholder = t(el.dataset.i18nPh); });
-    if (inCall) $("webBtn").textContent = t("endCall");
-    $("who").textContent = t(speaking ? "speaking" : "listening");
-    applyTheme(document.documentElement.getAttribute("data-theme"));
-  }
-
-  // ---------- theme (same behaviour and key as the main site) ----------
-  function applyTheme(theme) {
-    document.documentElement.setAttribute("data-theme", theme);
-    $("theme-toggle").setAttribute("aria-label", t(theme === "dark" ? "toLight" : "toDark"));
-  }
   $("theme-toggle").addEventListener("click", () => {
     const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
-    applyTheme(next);
+    document.documentElement.setAttribute("data-theme", next);
     try { localStorage.setItem("theme", next); } catch (e) {}
   });
 
-  // ---------- status + requests ----------
-  const status = (text, kind = "") => { const s = $("status"); s.textContent = text; s.className = kind; };
+  const setStatus = (id, text, kind = "") => { const s = $(id); s.textContent = text; s.className = "status " + kind; };
   const fields = () => ({ phone: $("phone").value, name: $("name").value, business: $("business").value, code: $("code").value });
   async function post(path, data) {
     const res = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
     const body = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(t(body.code) !== body.code ? t(body.code) : t("generic"));
+    if (!res.ok) throw new Error(t(body.code));
     return body;
+  }
+  function needCode(statusId) {
+    if ($("code").value.trim()) return false;
+    setStatus(statusId, t("needCode"), "error"); $("code").focus(); return true;
   }
 
   $("form").addEventListener("submit", async (e) => {
     e.preventDefault();
+    if (needCode("callStatus")) return;
     const btn = $("callBtn");
-    btn.disabled = true; status(t("starting"));
-    try { await post("/api/leo-call", fields()); status(t("calling"), "ok"); }
-    catch (err) { status(err.message, "error"); }
+    btn.disabled = true; setStatus("callStatus", t("starting"));
+    try { await post("/api/leo-call", fields()); setStatus("callStatus", t("calling"), "ok"); }
+    catch (err) { setStatus("callStatus", err.message, "error"); }
     finally { setTimeout(() => { btn.disabled = false; }, 15000); }
   });
 
-  // ---------- live call panel ----------
   let vapi = null, inCall = false, speaking = false, timerId = null, started = 0;
   const live = $("live"), who = $("who"), tr = $("transcript"), canvas = $("wave");
   const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -236,7 +244,7 @@
     const css = getComputedStyle(document.documentElement);
     const layers = [
       { level: youLevel, color: css.getPropertyValue("--muted").trim(), freq: 9, speed: 0.004 },
-      { level: leoLevel, color: css.getPropertyValue("--accent").trim(), freq: 6, speed: 0.003 },
+      { level: leoLevel, color: css.getPropertyValue("--violet").trim(), freq: 6, speed: 0.003 },
     ];
     for (const L of layers) {
       const amp = Math.max(1.5, L.level * h * 0.42);
@@ -273,31 +281,30 @@
     tr.scrollTop = tr.scrollHeight;
   }
 
+
   $("webBtn").addEventListener("click", async () => {
     const btn = $("webBtn");
     if (inCall && vapi) { vapi.stop(); return; }
+    if (needCode("webStatus")) return;
     const f = fields();
-    if (!f.code.trim()) { status(t("needCode"), "error"); return; }
-    btn.disabled = true; status(t("connecting"));
+    btn.disabled = true; setStatus("webStatus", t("connecting"));
     try {
       const conf = await post("/api/leo-web", { code: f.code, name: f.name, business: f.business });
       if (!vapi) {
         const { default: Vapi } = await import("https://esm.sh/@vapi-ai/web@2.7.1");
         vapi = new Vapi(conf.publicKey);
-        const reset = () => { inCall = false; btn.disabled = false; btn.textContent = t("talk"); showLive(false); };
-        vapi.on("call-start", () => { inCall = true; btn.disabled = false; btn.textContent = t("endCall"); status(t("connected"), "ok"); showLive(true); });
-        vapi.on("call-end", () => { reset(); status(t("ended")); });
-        vapi.on("error", (err) => { console.error(err); reset(); status(t("webFail"), "error"); });
+        const reset = () => { inCall = false; btn.disabled = false; btn.textContent = "Start talking"; showLive(false); };
+        vapi.on("call-start", () => { inCall = true; btn.disabled = false; btn.textContent = "End call"; setStatus("webStatus", t("connected"), "ok"); showLive(true); });
+        vapi.on("call-end", () => { reset(); setStatus("webStatus", t("ended")); });
+        vapi.on("error", (err) => { console.error(err); reset(); setStatus("webStatus", t("webFail"), "error"); });
         vapi.on("speech-start", () => { speaking = true; who.textContent = t("speaking"); });
         vapi.on("speech-end", () => { speaking = false; who.textContent = t("listening"); leoTarget = 0; });
         vapi.on("volume-level", (v) => { leoTarget = Math.min(1, v * 1.6); });
         vapi.on("message", (m) => { if (m && m.type === "transcript" && m.transcriptType === "final") addLine(m.role, m.transcript); });
       }
       await vapi.start(conf.assistantId, conf.overrides);
-    } catch (err) { btn.disabled = false; status(err.message, "error"); }
+    } catch (err) { btn.disabled = false; setStatus("webStatus", err.message, "error"); }
   });
-
-  applyLang();
 </script>
 </body>
 </html>
