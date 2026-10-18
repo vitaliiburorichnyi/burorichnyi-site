@@ -51,8 +51,9 @@
   .num { display:inline-block; min-width: 34px; font-size: 13px; text-align:center; padding: 2px 6px; margin-right: 6px; border-radius: 6px; background: var(--soft); color: var(--accent); }
   audio { width: 100%; margin: 6px 0 4px; }
   .outcome { margin: 6px 0 10px; }
-  .cols { display:grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-  @media (max-width: 700px) { .cols { grid-template-columns: 1fr; } }
+  .call h4 { margin-top: 14px; }
+  a.ts { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--accent); text-decoration: none; border-bottom: 1px dashed currentColor; }
+  a.ts:hover { border-bottom-style: solid; }
   ul { margin: 0; padding-left: 20px; } li { margin: 3px 0; }
   .muted { color: var(--muted); font-size: 14px; }
   .table { overflow-x: auto; margin: 6px 0 14px; border: 1px solid var(--line); border-radius: 12px; }
@@ -107,16 +108,14 @@
 
   <section id="calls">
     <h2>Recorded calls</h2>
-    <p class="muted">I played the prospect in all calls, improvising from a character card (not reading a script). Recordings are not edited.</p>
+    <p class="muted">I played the prospect in all calls. Recordings are not edited.</p>
     
-    <article class="call">
+    <article class="call" id="call-01">
       <h3><span class="num">01</span> Lending company (Andrzej) · real phone call · 8:07</h3>
-      <audio controls preload="none" src="audio/01.mp3"></audio>
+      <audio controls preload="metadata" src="/leo/results/audio/01.mp3"></audio>
       <p class="outcome"><b>Outcome:</b> email only. He would not book, and Leo did not push.</p>
-      <div class="cols">
-        <div><h4>Strong moments</h4><ul><li>0:01 Opens with the name ("Hi, is this Andrzej?"), introduces himself once</li><li>1:47 "It's business information" → Leo backs off politely, no pressure</li><li>1:59 Offers payment reminders "during normal working hours" (right for debt calls)</li><li>2:53 "Is it even allowed?" → no legal claims, points to the legal team and the demo</li><li>3:14 Real prices only; 3:35 "not cheap" → "compared to what?"</li><li>3:58 and 4:33 Angry customers → warm hand-off to the team, no promises</li><li>8:00 Warm goodbye, waits for mine, then hangs up</li></ul></div>
-        <div><h4>Weak spots</h4><ul><li>4:56 Asks "payment calls or incoming calls?" although he already knew they only call out</li><li>5:13 to 7:35 Spelling a Polish email domain took over 2 minutes</li><li>Answers take about 3.8 s on average on the phone line, sometimes 10 s (mostly transcription time)</li></ul></div>
-      </div>
+      <h4>Strong moments</h4><ul><li><a class="ts" href="#" data-t="1">0:01</a> Opens with the name ("Hi, is this Andrzej?"), introduces himself once</li><li><a class="ts" href="#" data-t="107">1:47</a> "It's business information" → Leo backs off politely, no pressure</li><li><a class="ts" href="#" data-t="119">1:59</a> Offers payment reminders "during normal working hours" (right for debt calls)</li><li><a class="ts" href="#" data-t="173">2:53</a> "Is it even allowed?" → no legal claims, points to the legal team and the demo</li><li><a class="ts" href="#" data-t="194">3:14</a> Real prices only; <a class="ts" href="#" data-t="215">3:35</a> "not cheap" → "compared to what?"</li><li><a class="ts" href="#" data-t="238">3:58</a> and <a class="ts" href="#" data-t="273">4:33</a> Angry customers → warm hand-off to the team, no promises</li><li><a class="ts" href="#" data-t="480">8:00</a> Warm goodbye, waits for mine, then hangs up</li></ul>
+      <h4>Weak spots</h4><ul><li><a class="ts" href="#" data-t="296">4:56</a> Asks "payment calls or incoming calls?" although he already knew they only call out</li><li><a class="ts" href="#" data-t="313">5:13</a> to <a class="ts" href="#" data-t="455">7:35</a> Spelling a Polish email domain took over 2 minutes</li><li>Answers take about 3.8 s on average on the phone line, sometimes 10 s (mostly transcription time)</li></ul>
     </article>
   </section>
 
@@ -323,6 +322,17 @@ Book a 20-minute demo with a specific day, a specific time, the time zone, and a
     var next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
     document.documentElement.setAttribute("data-theme", next);
     try { localStorage.setItem("theme", next); } catch (e) {}
+  });
+  document.querySelectorAll("a.ts").forEach(function (a) {
+    a.addEventListener("click", function (e) {
+      e.preventDefault();
+      var audio = a.closest(".call").querySelector("audio");
+      if (!audio) return;
+      document.querySelectorAll("audio").forEach(function (x) { if (x !== audio) x.pause(); });
+      var t = Number(a.dataset.t);
+      var go = function () { audio.currentTime = t; audio.play(); };
+      if (audio.readyState >= 1) go(); else { audio.addEventListener("loadedmetadata", go, { once: true }); audio.load(); }
+    });
   });
   document.getElementById("copyBtn").addEventListener("click", function () {
     var b = this;
