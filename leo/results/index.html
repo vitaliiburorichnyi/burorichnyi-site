@@ -167,7 +167,6 @@
 
   <section id="prompt">
     <h2>Prompt</h2>
-    <div class="table"><table><thead><tr><th>Setting</th><th>Value</th><th>Why</th></tr></thead><tbody><tr><td>First message mode</td><td>Assistant speaks first (from v18, was: waits for user)</td><td>v18: on real phone calls the first seconds of the person's audio can be lost, so a waiting Leo stays silent while they say "Hello?" again and again</td></tr><tr><td>First message</td><td><code>{% if name and name != "" %}Hi, is this {{name}}?{% else %}Hi there!{% endif %}</code></td><td>Short, so it does not talk over the person's "Hello?". With a name it sounds like a real sales call and checks it's the right person. No self-introduction here: that comes once, in the next turn</td></tr><tr><td>Variables</td><td><code>{{name}}</code>, <code>{{business_context}}</code>, <code>{{date}}</code></td><td>Name and business come from the test page form (or a lead list in a real campaign). The date lets Leo offer real days</td></tr></tbody></table></div>
     <details><summary>Full system prompt (v20)</summary>
       <button class="copy" type="button" id="copyBtn">Copy prompt</button>
       <pre id="prompt-text"># Identity
