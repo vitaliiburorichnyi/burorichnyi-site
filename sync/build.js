@@ -73,9 +73,12 @@ function takeSubtitle(md) {
 function page(sys, meta, body, subtitle) {
   const title = esc(meta.title.replace(/\s*#\d+\s*$/, ""));
   const desc = esc(sys.hook);
-  const links = [
-    '<a class="btn" href="' + sys.notion + '" target="_blank" rel="noopener noreferrer">Read the original on Notion</a>'
-  ];
+  const links = [];
+  if (sys.notion) {
+    links.push(
+      '<a class="btn" href="' + sys.notion + '" target="_blank" rel="noopener noreferrer">Read the original on Notion</a>'
+    );
+  }
   if (sys.github) {
     links.push(
       '<a class="btn" href="' + sys.github + '" target="_blank" rel="noopener noreferrer">Code on GitHub</a>'

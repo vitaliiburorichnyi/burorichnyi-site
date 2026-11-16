@@ -144,7 +144,7 @@ window.PORTFOLIO_DATA = {
   /* Cases whose page has been generated from Notion into cases/<id>.html.
      Everything not listed here still links straight out to Notion, so the
      rollout can go one case at a time. Written by sync/build.js. */
-  casePages: ["rag", "licensure-directory", "email-support", "voice-qualifier", "call-qa", "payment-report", "smartorder", "voice-retail", "youtube-digest", "pipeline-intel", "lead-funnel", "ticket-router", "stale-deals", "enrollment"],
+  casePages: ["rag", "licensure-directory", "email-support", "voice-qualifier", "call-qa", "payment-report", "smartorder", "voice-retail", "youtube-digest", "pipeline-intel", "lead-funnel", "ticket-router", "stale-deals", "enrollment", "account-research"],
 
   problems: [
     {
@@ -200,6 +200,12 @@ window.PORTFOLIO_DATA = {
       label: "Nobody knows what expires",
       blurb:
         "Licences, certifications and renewals live in inboxes and people's heads, so a lapse is found by accident rather than reported."
+    },
+    {
+      id: "outreach-generic",
+      label: "Cold emails that say nothing",
+      blurb:
+        "The first line of a cold email should be about the prospect, and AI research that invents facts makes that line a risk instead of a reason to reply."
     },
     {
       id: "too-much-to-read",
@@ -516,6 +522,20 @@ window.PORTFOLIO_DATA = {
         "Watches 50+ channels, triages with a cheap model, summarises the survivors with a strong one, and delivers a daily Slack digest.",
       result: "Hours of manual watching replaced by a digest. ~$0.20/day to run.",
       notion: "https://app.notion.com/p/36e70072ce92801ebcaec17716364b0c",
+      github: null
+    },
+    {
+      id: "account-research",
+      name: "Account Research Engine",
+      team: "solo",
+      problems: ["outreach-generic"],
+      capabilities: ["structured-output", "llm-eval", "error-handling"],
+      stack: ["Python", "Perplexity Sonar", "Gemini", "JSON schema validation"],
+      hook:
+        "Finds a recent fact about each prospect, proves the quote word for word on the live page, and writes the cold email opening from it. No source, no line.",
+      result:
+        "69% of accounts got an email built on a fact checked word for word on the live page. Zero invented facts.",
+      notion: null,
       github: null
     }
   ]
